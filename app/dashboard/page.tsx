@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { CreateRequestForm } from "@/components/create-request-form"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -16,12 +17,18 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen p-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-bold">Support Dashboard</h1>
         <Button onClick={handleSignOut} variant="outline">
           Sign out
         </Button>
       </div>
-      {/* Add your dashboard content here */}
+
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-card rounded-lg p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-4">Create New Support Request</h2>
+          <CreateRequestForm />
+        </div>
+      </div>
     </div>
   )
 } 
