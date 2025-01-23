@@ -28,11 +28,15 @@ import { Input } from "@/components/ui/input"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  onRowClick?: (data: TData) => void
+  selectedId?: string
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  onRowClick,
+  selectedId,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -90,13 +94,19 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={
+                    onRowClick ? "cursor-pointer hover:bg-muted/50" : undefined
+                  }
+                  data-selected={
+                    selectedId && (row.original as any).id === selectedId
+                      ? "true"
+                      : undefined
+                  }
+                  onClick={() => onRowClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -107,7 +117,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  No tickets found.
                 </TableCell>
               </TableRow>
             )}

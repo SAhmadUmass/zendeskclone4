@@ -15,7 +15,11 @@ function logSupabaseError(context: string, error: any, details?: object) {
   })
 }
 
-export function TicketsClient() {
+interface TicketsClientProps {
+  onTicketSelect?: (ticket: Ticket | null) => void
+}
+
+export function TicketsClient({ onTicketSelect }: TicketsClientProps) {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
   const [isSupport, setIsSupport] = useState(false)
@@ -198,5 +202,5 @@ export function TicketsClient() {
   if (loading) return null
   if (error) return <div className="text-red-500">Error: {error}</div>
 
-  return <TicketsDialog tickets={tickets} isSupport={isSupport} />
+  return <TicketsDialog tickets={tickets} isSupport={isSupport} onTicketSelect={onTicketSelect} />
 } 

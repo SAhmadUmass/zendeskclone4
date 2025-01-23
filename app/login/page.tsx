@@ -7,12 +7,41 @@ import { createClient } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [error, setError] = useState<string>("")
+  const [success, setSuccess] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isResetLoading, setIsResetLoading] = useState(false)
   const router = useRouter()
+
+  const handlePasswordReset = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsResetLoading(true)
+    setError("")
+    setSuccess("")
+
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get('resetEmail') as string
+    const supabase = createClient()
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+
+      if (error) throw error
+
+      setSuccess("Check your email - we've sent you a password reset link.")
+      e.currentTarget.reset()
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset email')
+    } finally {
+      setIsResetLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -107,6 +136,15 @@ export default function LoginPage() {
             </div>
           )}
 
+          {success && (
+            <div className="mt-4 p-4 text-sm text-green-600 bg-green-100 rounded-lg flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>{success}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
@@ -173,6 +211,53 @@ export default function LoginPage() {
               >
                 {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
               </Button>
+
+              {!isSignUp && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      Forgot password?
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Reset Password</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handlePasswordReset} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="resetEmail">Email address</Label>
+                        <Input
+                          id="resetEmail"
+                          name="resetEmail"
+                          type="email"
+                          placeholder="Enter your email"
+                          required
+                          disabled={isResetLoading}
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isResetLoading}
+                      >
+                        {isResetLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <span>Sending...</span>
+                          </>
+                        ) : (
+                          'Send Reset Link'
+                        )}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
           </form>
         </div>
