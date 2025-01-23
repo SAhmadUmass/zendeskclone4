@@ -1,21 +1,21 @@
 ### Essential Features for Week 1
 
 #### Core Ticket System
-- [ ] Basic ticket creation functionality
-- [ ] Ticket data model with:
-  - [ ] Ticket ID
-  - [ ] Creation date
-  - [ ] Status
-  - [ ] Priority level
-  - [ ] Conversation history
-  - [ ] Basic metadata fields
+- [x] Basic ticket creation functionality
+- [x] Ticket data model with:
+  - [x] Ticket ID
+  - [x] Creation date
+  - [x] Status
+  - [x] Priority level
+  - [x] Conversation history
+  - [x] Basic metadata fields
 
 #### User Management
-- [ ] Authentication system with three user roles:
-  - [ ] Customers
-  - [ ] Support workers
-  - [ ] Administrators
-- [ ] Basic user profiles
+- [x] Authentication system with three user roles:
+  - [x] Customers
+  - [x] Support workers
+  - [x] Administrators
+- [x] Basic user profiles
 
 #### API Foundation
 - [ ] Basic REST API endpoints for:
@@ -24,9 +24,9 @@
   - [ ] Authentication
 
 #### Basic Interfaces
-- [ ] Customer Portal:
-  - [ ] Ability to create tickets
-  - [ ] View ticket status
+- [x] Customer Portal:
+  - [x] Ability to create tickets
+  - [x] View ticket status
   - [ ] Basic ticket updates
 - [ ] Employee Interface:
   - [ ] View assigned tickets
