@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { CreateRequestForm } from "@/components/create-request-form"
+import { TicketsClient } from "./tickets/tickets-client"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -18,9 +19,12 @@ export default function DashboardPage() {
     <div className="min-h-screen p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Support Dashboard</h1>
-        <Button onClick={handleSignOut} variant="outline">
-          Sign out
-        </Button>
+        <div className="flex gap-4 items-center">
+          <TicketsClient />
+          <Button onClick={handleSignOut} variant="outline">
+            Sign out
+          </Button>
+        </div>
       </div>
 
       <div className="max-w-2xl mx-auto">
