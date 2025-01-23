@@ -18,10 +18,10 @@
 - [x] Basic user profiles
 
 #### API Foundation
-- [ ] Basic REST API endpoints for:
-  - [ ] Ticket CRUD operations
-  - [ ] User management
-  - [ ] Authentication
+- [x] Basic REST API endpoints for:
+  - [x] Ticket CRUD operations
+  - [x] User management
+  - [x] Authentication
 
 #### Basic Interfaces
 - [x] Customer Portal:

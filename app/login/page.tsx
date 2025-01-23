@@ -97,7 +97,7 @@ export default function LoginPage() {
         }
       }
 
-      router.push('/dashboard')
+      router.push('/customer-dashboard')
     } catch (err: any) {
       setError(err.message || 'An error occurred. Please try again.')
     } finally {

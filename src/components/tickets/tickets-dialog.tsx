@@ -10,8 +10,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { DataTable } from "./data-table"
-import { columns } from "@/app/dashboard/columns"
-import { Ticket } from "@/app/dashboard/columns"
+import { columns } from "@/app/customer-dashboard/tickets/columns"
+import { Ticket } from "@/app/customer-dashboard/tickets/columns"
 import { createClient } from "@/lib/supabase"
 
 export function TicketsDialog() {
