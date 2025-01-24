@@ -2,18 +2,27 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Ticket, Users, BarChart2, Settings } from "lucide-react"
+import { LayoutDashboard, Ticket, Users, BarChart2, Settings, LogOut } from "lucide-react"
+import { createClient } from "@/utils/supabase/client"
+import { useRouter } from "next/navigation"
 
 const navItems = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Tickets", href: "/tickets", icon: Ticket },
-  { name: "Customers", href: "/customers", icon: Users },
-  { name: "Analytics", href: "/analytics", icon: BarChart2 },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Dashboard", href: "/support-dashboard", icon: LayoutDashboard },
+  { name: "Tickets", href: "/support-dashboard/tickets", icon: Ticket },
+  { name: "Customers", href: "/support-dashboard/customers", icon: Users },
+  { name: "Analytics", href: "/support-dashboard/analytics", icon: BarChart2 },
+  { name: "Settings", href: "/support-dashboard/settings", icon: Settings },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const supabase = createClient()
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
 
   return (
     <aside className="bg-white w-64 h-screen flex flex-col border-r">
@@ -37,6 +46,15 @@ export function Sidebar() {
           ))}
         </ul>
       </nav>
+      <div className="p-2">
+        <button
+          onClick={handleSignOut}
+          className="flex items-center w-full p-2 rounded-lg hover:bg-gray-100"
+        >
+          <LogOut className="w-6 h-6 mr-3" />
+          Sign Out
+        </button>
+      </div>
     </aside>
   )
 }
