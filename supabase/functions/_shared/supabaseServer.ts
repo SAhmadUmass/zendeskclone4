@@ -1,35 +1,47 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
+import { CookieOptions } from '@supabase/auth-helpers-shared'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Mock storage for Edge runtime
+export class EdgeStorageAdapter implements Storage {
+  private store = new Map<string, string>()
 
-export const createClient = async () => {
-  const cookieStore = cookies()
+  getItem(key: string): string | null {
+    return this.store.get(key) ?? null
+  }
 
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value
-      },
-      set(name: string, value: string, options: any) {
-        try {
-          cookieStore.set(name, value, options)
-        } catch (error) {
-          // The `set` method was called from a Server Component.
-          // This can be ignored if you have middleware refreshing
-          // user sessions.
-        }
-      },
-      remove(name: string, options: any) {
-        try {
-          cookieStore.delete(name)
-        } catch (error) {
-          // The `delete` method was called from a Server Component.
-          // This can be ignored if you have middleware refreshing
-          // user sessions.
-        }
-      },
-    },
-  })
+  setItem(key: string, value: string): void {
+    this.store.set(key, value)
+  }
+
+  removeItem(key: string): void {
+    this.store.delete(key)
+  }
+
+  clear(): void {
+    this.store.clear()
+  }
+
+  get length(): number {
+    return this.store.size
+  }
+
+  key(index: number): string | null {
+    return Array.from(this.store.keys())[index] ?? null
+  }
+}
+
+// Create a Supabase client for the Edge runtime
+export const createEdgeClient = () => {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        storage: new EdgeStorageAdapter(),
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false
+      }
+    }
+  )
 } 
