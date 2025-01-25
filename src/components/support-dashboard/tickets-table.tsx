@@ -23,10 +23,12 @@ type Ticket = {
 interface TicketsTableProps {
   tickets?: Ticket[]
   loading: boolean
+  limit?: number
 }
 
-export function TicketsTable({ tickets = [], loading }: TicketsTableProps) {
+export function TicketsTable({ tickets = [], loading, limit }: TicketsTableProps) {
   const router = useRouter()
+  const displayedTickets = limit ? tickets.slice(0, limit) : tickets
 
   const handleChatClick = (ticketId: string) => {
     router.push(`/support-dashboard/tickets/${ticketId}/chat`)
@@ -48,7 +50,7 @@ export function TicketsTable({ tickets = [], loading }: TicketsTableProps) {
 
   const renderLoadingSkeleton = () => (
     <TableBody>
-      {[...Array(5)].map((_, i) => (
+      {[...Array(limit || 5)].map((_, i) => (
         <TableRow key={i}>
           <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
           <TableCell><Skeleton className="h-4 w-[250px]" /></TableCell>
@@ -74,7 +76,7 @@ export function TicketsTable({ tickets = [], loading }: TicketsTableProps) {
 
   const renderTickets = () => (
     <TableBody>
-      {tickets.map((ticket) => (
+      {displayedTickets.map((ticket) => (
         <TableRow 
           key={ticket.id} 
           className="hover:bg-muted/50 cursor-pointer"
@@ -115,7 +117,7 @@ export function TicketsTable({ tickets = [], loading }: TicketsTableProps) {
   return (
     <Table>
       {renderTableHeader()}
-      {loading ? renderLoadingSkeleton() : tickets.length === 0 ? renderEmptyState() : renderTickets()}
+      {loading ? renderLoadingSkeleton() : displayedTickets.length === 0 ? renderEmptyState() : renderTickets()}
     </Table>
   )
 }
