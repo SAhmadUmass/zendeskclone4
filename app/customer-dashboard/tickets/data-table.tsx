@@ -32,7 +32,11 @@ interface DataTableProps<TData, TValue> {
   selectedId?: string
 }
 
-export function DataTable<TData, TValue>({
+interface HasId {
+  id: string
+}
+
+export function DataTable<TData extends HasId, TValue>({
   columns,
   data,
   onRowClick,
@@ -98,7 +102,7 @@ export function DataTable<TData, TValue>({
                     onRowClick ? "cursor-pointer hover:bg-muted/50" : undefined
                   }
                   data-selected={
-                    selectedId && (row.original as any).id === selectedId
+                    selectedId && row.original.id === selectedId
                       ? "true"
                       : undefined
                   }

@@ -50,6 +50,8 @@ export function TicketsDialog({
     if (onTicketSelect) {
       onTicketSelect(ticket)
       setOpen(false)
+    } else {
+      setSelectedTicket(ticket)
     }
   }, [onTicketSelect])
 

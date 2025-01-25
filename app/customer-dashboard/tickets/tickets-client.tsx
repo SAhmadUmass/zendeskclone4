@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { TicketsDialog } from './tickets-dialog'
 import { Ticket } from './columns'
+import { PostgrestError } from '@supabase/supabase-js'
 
-function logSupabaseError(context: string, error: any, details?: object) {
+function logSupabaseError(context: string, error: PostgrestError | Error, details?: object) {
   console.error(`Supabase Error [${context}]:`, {
     message: error.message,
-    code: error.code,
-    details: error.details,
-    hint: error.hint,
+    code: 'code' in error ? error.code : undefined,
+    details: 'details' in error ? error.details : undefined,
+    hint: 'hint' in error ? error.hint : undefined,
     ...details
   })
 }

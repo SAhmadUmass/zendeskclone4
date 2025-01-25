@@ -58,6 +58,7 @@ export function useSupabaseQuery<T>({
       isMounted = false
       controller.abort()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchData, ...dependencies])
 
   return { data, loading, error }
