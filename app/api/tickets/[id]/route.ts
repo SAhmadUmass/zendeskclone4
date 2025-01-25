@@ -15,7 +15,7 @@ export interface RouteSegment {
 export async function GET(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { [key: string]: string | string[] } }
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -69,7 +69,7 @@ export async function GET(
 // PUT /api/tickets/[id] - Update ticket
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { [key: string]: string | string[] } }
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -134,7 +134,7 @@ export async function PUT(
 export async function DELETE(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { [key: string]: string | string[] } }
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
