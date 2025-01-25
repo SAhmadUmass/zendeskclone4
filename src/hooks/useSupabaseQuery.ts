@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/utils/supabase/client'
 import { PostgrestFilterBuilder } from '@supabase/postgrest-js'
 
 type QueryOptions<T> = {
-  queryFn: () => PostgrestFilterBuilder<any, any, T[], any, any>
+  queryFn: () => ReturnType<typeof PostgrestFilterBuilder.prototype.select>
   dependencies?: unknown[]
   onSuccess?: (data: T[]) => void
   onError?: (error: Error) => void
@@ -32,8 +31,8 @@ export function useSupabaseQuery<T>({
       }
 
       if (result) {
-        setData(result)
-        onSuccess?.(result)
+        setData(result as T[])
+        onSuccess?.(result as T[])
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An error occurred'

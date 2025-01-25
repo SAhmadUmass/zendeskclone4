@@ -36,8 +36,8 @@ export default function LoginPage() {
 
       setSuccess("Check your email - we've sent you a password reset link.")
       e.currentTarget.reset()
-    } catch (err: any) {
-      setError(err.message || 'Failed to send reset email')
+    } catch (err: Error | unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to send reset email')
     } finally {
       setIsResetLoading(false)
     }
@@ -98,8 +98,8 @@ export default function LoginPage() {
       }
 
       router.push('/customer-dashboard')
-    } catch (err: any) {
-      setError(err.message || 'An error occurred. Please try again.')
+    } catch (err: Error | unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred. Please try again.')
     } finally {
       setIsLoading(false)
     }

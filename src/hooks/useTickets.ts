@@ -1,7 +1,6 @@
 import { useSupabaseQuery } from './useSupabaseQuery'
 import { useSupabaseRealtime } from './useSupabaseRealtime'
 import { createClient } from '@/utils/supabase/client'
-import { PostgrestFilterBuilder } from '@supabase/postgrest-js'
 
 export type Ticket = {
   id: string
@@ -65,7 +64,7 @@ export function useTickets({ status, priority, limit }: UseTicketsOptions = {}) 
       query = query.limit(limit)
     }
 
-    return query as unknown as PostgrestFilterBuilder<any, any, RawTicket[], any, any>
+    return query
   }
 
   const { data: rawTickets, loading, error } = useSupabaseQuery<RawTicket>({
