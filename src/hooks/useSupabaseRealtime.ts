@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { RealtimeChannel } from '@supabase/supabase-js'
+import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
 type RealtimeOptions = {
   table: string
-  onUpdate?: () => void | Promise<void>
+  onUpdate?: (payload: RealtimePostgresChangesPayload<any>) => void | Promise<void>
   event?: '*' | 'INSERT' | 'UPDATE' | 'DELETE'
   schema?: string
   filter?: string
@@ -21,31 +21,51 @@ export function useSupabaseRealtime({
     const supabase = createClient()
     let channel: RealtimeChannel
 
-    const setupSubscription = () => {
-      channel = supabase
-        .channel('table-db-changes')
-        .on(
-          'postgres_changes',
-          {
-            event,
-            schema,
-            table,
-            filter
-          },
-          async () => {
-            if (onUpdate) {
-              await onUpdate()
+    const setupSubscription = async () => {
+      try {
+        channel = supabase.channel('schema-db-changes', {
+          config: {
+            postgres_changes: {
+              event: event,
+              schema: schema,
+              table: table,
+              filter: filter
             }
           }
-        )
-        .subscribe()
+        })
+        
+        const subscription = channel
+          .on(
+            'postgres_changes',
+            {
+              event: event,
+              schema: schema,
+              table: table,
+              filter: filter
+            },
+            (payload: RealtimePostgresChangesPayload<any>) => {
+              if (onUpdate) {
+                onUpdate(payload)
+              }
+            }
+          )
+          .subscribe()
+
+        return subscription
+      } catch (error) {
+        console.error('Error setting up realtime subscription:', error)
+      }
     }
 
-    setupSubscription()
+    const subscription = setupSubscription()
 
     return () => {
-      if (channel) {
-        channel.unsubscribe()
+      if (subscription) {
+        subscription.then(sub => {
+          if (sub) {
+            supabase.removeChannel(channel)
+          }
+        })
       }
     }
   }, [table, event, schema, filter, onUpdate])
