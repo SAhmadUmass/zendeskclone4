@@ -2,42 +2,36 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { config as appConfig } from '@/lib/config'
 
-export const createClient = () => {
+export const runtime = 'edge'
+
+export const createClient = async () => {
   return createServerClient(
     appConfig.supabase.url,
     appConfig.supabase.anonKey,
     {
       cookies: {
-        get(name: string) {
-          const cookieStore = cookies()
-          return cookieStore.get(name)?.value ?? ''
+        async get(name: string) {
+          const cookieStore = await cookies()
+          const cookie = cookieStore.get(name)
+          return cookie?.value ?? ''
         },
-        set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookies().set({
-              name,
-              value,
-              ...options,
-              // Ensure secure cookie in production
-              secure: process.env.NODE_ENV === 'production',
-            })
-          } catch (error) {
-            // Handle cookie setting error
-            console.error('Error setting cookie:', error)
-          }
+        async set(name: string, value: string, options: CookieOptions) {
+          const cookieStore = await cookies()
+          cookieStore.set({
+            name,
+            value,
+            ...options,
+            secure: process.env.NODE_ENV === 'production',
+          })
         },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookies().set({
-              name,
-              value: '',
-              ...options,
-              maxAge: 0
-            })
-          } catch (error) {
-            // Handle cookie deletion error
-            console.error('Error deleting cookie:', error)
-          }
+        async remove(name: string, options: CookieOptions) {
+          const cookieStore = await cookies()
+          cookieStore.set({
+            name,
+            value: '',
+            ...options,
+            maxAge: 0
+          })
         },
       },
     }
