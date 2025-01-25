@@ -6,7 +6,7 @@ import { Ticket, TicketCreate, validateTicketCreate } from './types'
 
 // GET /api/tickets - List tickets
 export async function GET(
-  request: Request
+  _request: Request
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
