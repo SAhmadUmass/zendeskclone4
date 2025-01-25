@@ -1,42 +1,23 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export const runtime = 'edge'
-
-export const createClient = async () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable')
-  if (!supabaseAnonKey) throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
-
+export async function createClient() {
   return createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         async get(name: string) {
           const cookieStore = await cookies()
-          const cookie = cookieStore.get(name)
-          return cookie?.value ?? ''
+          return cookieStore.get(name)?.value
         },
-        async set(name: string, value: string, options: CookieOptions) {
+        async set(name: string, value: string, options: any) {
           const cookieStore = await cookies()
-          cookieStore.set({
-            name,
-            value,
-            ...options,
-            secure: process.env.NODE_ENV === 'production',
-          })
+          cookieStore.set(name, value, options)
         },
-        async remove(name: string, options: CookieOptions) {
+        async remove(name: string, options: any) {
           const cookieStore = await cookies()
-          cookieStore.set({
-            name,
-            value: '',
-            ...options,
-            maxAge: 0
-          })
+          cookieStore.set(name, '', { ...options, maxAge: 0 })
         },
       },
     }

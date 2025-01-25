@@ -12,7 +12,7 @@ import {
 import { DataTable } from "./data-table"
 import { columns } from "@/app/customer-dashboard/tickets/columns"
 import { Ticket } from "@/app/customer-dashboard/tickets/columns"
-import { createClient } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/client"
 
 export function TicketsDialog() {
   const [tickets, setTickets] = useState<Ticket[]>([])

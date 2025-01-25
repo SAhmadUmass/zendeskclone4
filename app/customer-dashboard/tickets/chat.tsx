@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Send } from "lucide-react"
 import { Ticket } from "./columns"
-import { createClient } from "@/lib/supabase"
+import { createClient } from "@/utils/supabase/client"
 
 interface Message {
   id: string

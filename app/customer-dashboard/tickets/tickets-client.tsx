@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/client'
 import { TicketsDialog } from './tickets-dialog'
 import { Ticket } from './columns'
 import { PostgrestError } from '@supabase/supabase-js'

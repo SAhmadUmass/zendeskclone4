@@ -1,9 +1,22 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { config as appConfig } from '@/lib/config'
 
-export const createClient = () => {
-  return createBrowserClient(
-    appConfig.supabase.url,
-    appConfig.supabase.anonKey
+let supabase: ReturnType<typeof createBrowserClient> | null = null
+
+export function createClient() {
+  if (supabase) return supabase
+
+  supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce'
+      }
+    }
   )
+
+  return supabase
 } 
