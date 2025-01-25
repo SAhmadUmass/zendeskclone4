@@ -12,8 +12,8 @@ interface RouteContext {
 
 // GET /api/tickets/[id] - Get single ticket
 export async function GET(
-  request: NextRequest,
-  { params }: RouteContext
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -66,8 +66,8 @@ export async function GET(
 
 // PUT /api/tickets/[id] - Update ticket
 export async function PUT(
-  request: NextRequest,
-  { params }: RouteContext
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -130,8 +130,8 @@ export async function PUT(
 
 // DELETE /api/tickets/[id] - Delete ticket
 export async function DELETE(
-  request: NextRequest,
-  { params }: RouteContext
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
