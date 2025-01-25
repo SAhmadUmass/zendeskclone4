@@ -1,15 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server'
-
-export interface RouteParams<T> {
-  params: T
-  searchParams: { [key: string]: string | string[] | undefined }
-}
-
-export type RouteHandler<TParams = Record<string, unknown>, TResponse = NextResponse> = (
-  req: NextRequest,
-  params: RouteParams<TParams>
-) => Promise<TResponse>
+import { NextRequest } from 'next/server'
 
 export type TicketRouteParams = {
   id: string
-} 
+}
+
+export type RouteContext<T> = {
+  params: T
+}
+
+export type RouteHandler<T> = (
+  request: Request | NextRequest,
+  context: RouteContext<T>
+) => Promise<Response> 

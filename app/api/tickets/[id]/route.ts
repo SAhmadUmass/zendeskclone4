@@ -6,10 +6,10 @@ import { Ticket, TicketUpdate, validateTicketUpdate } from '../types'
 import { RouteHandler, TicketRouteParams } from '@/app/api/types'
 
 // GET /api/tickets/[id] - Get single ticket
-export const GET: RouteHandler<TicketRouteParams, NextResponse> = async (
-  _request,
-  { params }
-) => {
+export async function GET(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
@@ -36,7 +36,7 @@ export const GET: RouteHandler<TicketRouteParams, NextResponse> = async (
         created_at,
         updated_at
       `)
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .single()
 
     if (error) {
@@ -60,10 +60,10 @@ export const GET: RouteHandler<TicketRouteParams, NextResponse> = async (
 }
 
 // PUT /api/tickets/[id] - Update ticket
-export const PUT: RouteHandler<TicketRouteParams, NextResponse> = async (
-  request,
-  { params }
-) => {
+export async function PUT(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
@@ -96,7 +96,7 @@ export const PUT: RouteHandler<TicketRouteParams, NextResponse> = async (
     const { data: ticket, error } = await supabase
       .from('requests')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .select()
       .single()
 
@@ -124,10 +124,10 @@ export const PUT: RouteHandler<TicketRouteParams, NextResponse> = async (
 }
 
 // DELETE /api/tickets/[id] - Delete ticket
-export const DELETE: RouteHandler<TicketRouteParams, NextResponse> = async (
-  _request,
-  { params }
-) => {
+export async function DELETE(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
@@ -144,7 +144,7 @@ export const DELETE: RouteHandler<TicketRouteParams, NextResponse> = async (
     const { error } = await supabase
       .from('requests')
       .delete()
-      .eq('id', params.id)
+      .eq('id', context.params.id)
 
     if (error) {
       if (error.code === 'PGRST116') {
