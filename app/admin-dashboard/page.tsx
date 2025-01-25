@@ -23,6 +23,7 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
