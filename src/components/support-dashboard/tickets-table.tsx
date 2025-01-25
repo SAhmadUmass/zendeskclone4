@@ -6,29 +6,64 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useRouter } from "next/navigation"
 import { MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
+import { createClient } from "@/utils/supabase/client"
 
 type Ticket = {
   id: string
   title: string
   status: string
   priority: string
-  assigned_to: string
+  assigned_to: string | null
   created_at: string
   customer: {
     id: string
-    full_name: string
+    full_name: string | null
   }
 }
 
 interface TicketsTableProps {
-  tickets?: Ticket[]
-  loading: boolean
   limit?: number
 }
 
-export function TicketsTable({ tickets = [], loading, limit }: TicketsTableProps) {
+export function TicketsTable({ limit }: TicketsTableProps) {
   const router = useRouter()
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [loading, setLoading] = useState(true)
   const displayedTickets = limit ? tickets.slice(0, limit) : tickets
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('requests')
+          .select(`
+            id,
+            title,
+            status,
+            priority,
+            assigned_to,
+            created_at,
+            customer:customer_id (
+              id,
+              full_name
+            )
+          `)
+          .order('created_at', { ascending: false })
+          .returns<Ticket[]>()
+
+        if (error) throw error
+        setTickets(data || [])
+      } catch (err) {
+        console.error('Error fetching tickets:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchTickets()
+  }, [])
 
   const handleChatClick = (ticketId: string) => {
     router.push(`/support-dashboard/tickets/${ticketId}/chat`)
@@ -81,7 +116,7 @@ export function TicketsTable({ tickets = [], loading, limit }: TicketsTableProps
           key={ticket.id} 
           className="hover:bg-muted/50 cursor-pointer"
         >
-          <TableCell>{ticket.customer.full_name}</TableCell>
+          <TableCell>{ticket.customer.full_name || 'Unknown'}</TableCell>
           <TableCell>{ticket.title}</TableCell>
           <TableCell>
             <Badge variant={ticket.status === "open" ? "default" : "secondary"}>{ticket.status}</Badge>
