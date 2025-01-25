@@ -1,6 +1,6 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { PostgrestError } from '@supabase/supabase-js'
 import { Ticket, TicketCreate, validateTicketCreate } from './types'
 
@@ -10,8 +10,7 @@ export interface RouteSegment {
 
 // GET /api/tickets - List tickets
 export async function GET(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _request: NextRequest
+  request: Request
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -55,7 +54,7 @@ export async function GET(
 
 // POST /api/tickets - Create ticket
 export async function POST(
-  request: NextRequest
+  request: Request
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })

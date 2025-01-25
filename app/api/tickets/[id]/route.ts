@@ -13,9 +13,8 @@ export interface RouteSegment {
 
 // GET /api/tickets/[id] - Get single ticket
 export async function GET(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _request: NextRequest,
-  context: { params: { id: string } }
+  request: Request,
+  { params }: { params: { id: string } }
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -43,7 +42,7 @@ export async function GET(
         created_at,
         updated_at
       `)
-      .eq('id', context.params.id)
+      .eq('id', params.id)
       .single()
 
     if (error) {
@@ -68,8 +67,8 @@ export async function GET(
 
 // PUT /api/tickets/[id] - Update ticket
 export async function PUT(
-  request: NextRequest,
-  context: { params: { id: string } }
+  request: Request,
+  { params }: { params: { id: string } }
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -103,7 +102,7 @@ export async function PUT(
     const { data: ticket, error } = await supabase
       .from('requests')
       .update(updateData)
-      .eq('id', context.params.id)
+      .eq('id', params.id)
       .select()
       .single()
 
@@ -132,9 +131,8 @@ export async function PUT(
 
 // DELETE /api/tickets/[id] - Delete ticket
 export async function DELETE(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _request: NextRequest,
-  context: { params: { id: string } }
+  request: Request,
+  { params }: { params: { id: string } }
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -152,7 +150,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('requests')
       .delete()
-      .eq('id', context.params.id)
+      .eq('id', params.id)
 
     if (error) {
       if (error.code === 'PGRST116') {
