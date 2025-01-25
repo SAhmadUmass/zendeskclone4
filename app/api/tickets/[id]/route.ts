@@ -3,7 +3,6 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { PostgrestError } from '@supabase/supabase-js'
 import { Ticket, TicketUpdate, validateTicketUpdate } from '../types'
-import { RouteHandler, TicketRouteParams } from '@/app/api/types'
 
 // GET /api/tickets/[id] - Get single ticket
 export async function GET(
