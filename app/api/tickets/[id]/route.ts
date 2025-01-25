@@ -3,12 +3,13 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { PostgrestError } from '@supabase/supabase-js'
 import { Ticket, TicketUpdate, validateTicketUpdate } from '../types'
+import { RouteHandler, TicketRouteParams } from '@/app/api/types'
 
 // GET /api/tickets/[id] - Get single ticket
-export async function GET(
-  _request: Request,
-  { params }: { params: { id: string } }
-) {
+export const GET: RouteHandler<TicketRouteParams, NextResponse> = async (
+  _request,
+  { params }
+) => {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
@@ -59,10 +60,10 @@ export async function GET(
 }
 
 // PUT /api/tickets/[id] - Update ticket
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export const PUT: RouteHandler<TicketRouteParams, NextResponse> = async (
+  request,
+  { params }
+) => {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
@@ -123,10 +124,10 @@ export async function PUT(
 }
 
 // DELETE /api/tickets/[id] - Delete ticket
-export async function DELETE(
-  _request: Request,
-  { params }: { params: { id: string } }
-) {
+export const DELETE: RouteHandler<TicketRouteParams, NextResponse> = async (
+  _request,
+  { params }
+) => {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
