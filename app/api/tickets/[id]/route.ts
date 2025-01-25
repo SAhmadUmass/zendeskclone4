@@ -7,7 +7,7 @@ import { Ticket, TicketUpdate, validateTicketUpdate } from '../types'
 // GET /api/tickets/[id] - Get single ticket
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -21,6 +21,7 @@ export async function GET(
       )
     }
 
+    const resolvedParams = await params
     // Get single ticket (RLS will verify access)
     const { data: ticket, error } = await supabase
       .from('requests')
@@ -35,7 +36,7 @@ export async function GET(
         created_at,
         updated_at
       `)
-      .eq('id', params.id)
+      .eq('id', resolvedParams.id)
       .single()
 
     if (error) {
@@ -61,7 +62,7 @@ export async function GET(
 // PUT /api/tickets/[id] - Update ticket
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -91,11 +92,12 @@ export async function PUT(
       updated_at: new Date().toISOString()
     }
     
+    const resolvedParams = await params
     // Update ticket
     const { data: ticket, error } = await supabase
       .from('requests')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', resolvedParams.id)
       .select()
       .single()
 
@@ -125,7 +127,7 @@ export async function PUT(
 // DELETE /api/tickets/[id] - Delete ticket
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -139,11 +141,12 @@ export async function DELETE(
       )
     }
 
+    const resolvedParams = await params
     // Delete ticket
     const { error } = await supabase
       .from('requests')
       .delete()
-      .eq('id', params.id)
+      .eq('id', resolvedParams.id)
 
     if (error) {
       if (error.code === 'PGRST116') {
