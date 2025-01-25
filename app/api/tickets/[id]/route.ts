@@ -15,7 +15,8 @@ export interface RouteSegment {
 export async function GET(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _request: NextRequest,
-  { params }: RouteSegment
+  // Destructure only what we need to avoid unused variable warnings
+  { params }: Pick<RouteSegment, 'params'>
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -69,7 +70,8 @@ export async function GET(
 // PUT /api/tickets/[id] - Update ticket
 export async function PUT(
   request: NextRequest,
-  { params }: RouteSegment
+  // Destructure only what we need to avoid unused variable warnings
+  { params }: Pick<RouteSegment, 'params'>
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -134,7 +136,8 @@ export async function PUT(
 export async function DELETE(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _request: NextRequest,
-  { params }: RouteSegment
+  // Destructure only what we need to avoid unused variable warnings
+  { params }: Pick<RouteSegment, 'params'>
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
