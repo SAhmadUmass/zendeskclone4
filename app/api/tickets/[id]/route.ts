@@ -4,18 +4,16 @@ import { NextResponse } from 'next/server'
 import { PostgrestError } from '@supabase/supabase-js'
 import { Ticket, TicketUpdate, validateTicketUpdate } from '../types'
 
-export interface RouteSegment {
+type Context = {
   params: {
     id: string
   }
-  searchParams: { [key: string]: string | string[] | undefined }
 }
 
 // GET /api/tickets/[id] - Get single ticket
 export async function GET(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _request: Request,
-  { params }: { params: Record<string, string> }
+  request: Request,
+  context: Context
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -43,7 +41,7 @@ export async function GET(
         created_at,
         updated_at
       `)
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .single()
 
     if (error) {
@@ -69,7 +67,7 @@ export async function GET(
 // PUT /api/tickets/[id] - Update ticket
 export async function PUT(
   request: Request,
-  { params }: { params: Record<string, string> }
+  context: Context
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -103,7 +101,7 @@ export async function PUT(
     const { data: ticket, error } = await supabase
       .from('requests')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .select()
       .single()
 
@@ -132,9 +130,8 @@ export async function PUT(
 
 // DELETE /api/tickets/[id] - Delete ticket
 export async function DELETE(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _request: Request,
-  { params }: { params: Record<string, string> }
+  request: Request,
+  context: Context
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -152,7 +149,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('requests')
       .delete()
-      .eq('id', params.id)
+      .eq('id', context.params.id)
 
     if (error) {
       if (error.code === 'PGRST116') {
