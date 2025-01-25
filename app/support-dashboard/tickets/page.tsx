@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
-import { useTickets, type Ticket } from "@/hooks/useTickets"
+import { useTickets } from "@/hooks/useTickets"
 
 type TicketStatus = 'open' | 'closed'
 type TicketPriority = 'low' | 'medium' | 'high'

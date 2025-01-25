@@ -1,6 +1,7 @@
 import { useSupabaseQuery } from './useSupabaseQuery'
 import { useSupabaseRealtime } from './useSupabaseRealtime'
 import { createClient } from '@/utils/supabase/client'
+import { PostgrestFilterBuilder } from '@supabase/postgrest-js'
 
 export type Ticket = {
   id: string
@@ -10,6 +11,19 @@ export type Ticket = {
   assigned_to: string
   created_at: string
   customer: {
+    id: string
+    full_name: string
+  }
+}
+
+type RawTicket = {
+  id: string
+  title: string
+  status: string
+  priority: string
+  assigned_to: string
+  created_at: string
+  profiles: {
     id: string
     full_name: string
   }
@@ -51,16 +65,16 @@ export function useTickets({ status, priority, limit }: UseTicketsOptions = {}) 
       query = query.limit(limit)
     }
 
-    return query
+    return query as unknown as PostgrestFilterBuilder<any, any, RawTicket[], any, any>
   }
 
-  const { data: rawTickets, loading, error } = useSupabaseQuery<any>({
+  const { data: rawTickets, loading, error } = useSupabaseQuery<RawTicket>({
     queryFn: buildQuery,
     dependencies: [status, priority, limit]
   })
 
   // Transform the data to match our Ticket type
-  const tickets = rawTickets?.map((ticket: any) => ({
+  const tickets = rawTickets?.map((ticket: RawTicket): Ticket => ({
     ...ticket,
     customer: ticket.profiles
   }))

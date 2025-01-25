@@ -5,7 +5,7 @@ import { PostgrestError } from '@supabase/supabase-js'
 import { Ticket, TicketCreate, validateTicketCreate } from './types'
 
 // GET /api/tickets - List tickets
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     

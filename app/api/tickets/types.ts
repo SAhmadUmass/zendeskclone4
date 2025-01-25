@@ -23,38 +23,40 @@ export interface TicketUpdate extends Partial<TicketCreate> {
   status?: TicketStatus
 }
 
-export const isValidStatus = (status: any): status is TicketStatus => {
-  return ['open', 'in_progress', 'resolved'].includes(status)
+export const isValidStatus = (status: unknown): status is TicketStatus => {
+  return ['open', 'in_progress', 'resolved'].includes(status as string)
 }
 
-export const isValidPriority = (priority: any): priority is TicketPriority => {
-  return ['low', 'medium', 'high'].includes(priority)
+export const isValidPriority = (priority: unknown): priority is TicketPriority => {
+  return ['low', 'medium', 'high'].includes(priority as string)
 }
 
-export const validateTicketCreate = (data: any): { valid: boolean; error?: string } => {
-  if (!data.title || typeof data.title !== 'string') {
+export const validateTicketCreate = (data: unknown): { valid: boolean; error?: string } => {
+  const ticketData = data as Partial<TicketCreate>
+  if (!ticketData.title || typeof ticketData.title !== 'string') {
     return { valid: false, error: 'Title is required and must be a string' }
   }
-  if (!data.description || typeof data.description !== 'string') {
+  if (!ticketData.description || typeof ticketData.description !== 'string') {
     return { valid: false, error: 'Description is required and must be a string' }
   }
-  if (!data.priority || !isValidPriority(data.priority)) {
+  if (!ticketData.priority || !isValidPriority(ticketData.priority)) {
     return { valid: false, error: 'Valid priority (low, medium, high) is required' }
   }
   return { valid: true }
 }
 
-export const validateTicketUpdate = (data: any): { valid: boolean; error?: string } => {
-  if (data.title && typeof data.title !== 'string') {
+export const validateTicketUpdate = (data: unknown): { valid: boolean; error?: string } => {
+  const ticketData = data as Partial<TicketUpdate>
+  if (ticketData.title && typeof ticketData.title !== 'string') {
     return { valid: false, error: 'Title must be a string' }
   }
-  if (data.description && typeof data.description !== 'string') {
+  if (ticketData.description && typeof ticketData.description !== 'string') {
     return { valid: false, error: 'Description must be a string' }
   }
-  if (data.priority && !isValidPriority(data.priority)) {
+  if (ticketData.priority && !isValidPriority(ticketData.priority)) {
     return { valid: false, error: 'Priority must be low, medium, or high' }
   }
-  if (data.status && !isValidStatus(data.status)) {
+  if (ticketData.status && !isValidStatus(ticketData.status)) {
     return { valid: false, error: 'Status must be open, in_progress, or resolved' }
   }
   return { valid: true }

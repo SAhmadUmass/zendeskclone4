@@ -18,7 +18,6 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { cn } from "@/lib/utils"
 
 interface TicketsDialogProps {
   tickets: Ticket[]
@@ -130,7 +129,7 @@ export function TicketsDialog({
                     </Avatar>
                     <div className="bg-muted rounded-lg p-3">
                       <p className="text-sm">
-                        Hello! How can I help you with "{selectedTicket.title}"?
+                        Hello! How can I help you with &quot;{selectedTicket.title}&quot;?
                       </p>
                     </div>
                   </div>

@@ -20,7 +20,7 @@ export default function CustomersPage() {
     try {
       await updateCustomer(updatedCustomer)
       setSelectedCustomer(null)
-    } catch (err) {
+    } catch {
       // Error is handled by the hook
     }
   }

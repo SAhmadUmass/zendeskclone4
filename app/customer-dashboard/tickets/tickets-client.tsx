@@ -76,46 +76,8 @@ export function TicketsClient({ onTicketSelect }: TicketsClientProps) {
 
         const isUserSupport = profile.role === 'support'
         setIsSupport(isUserSupport)
-        console.log('User context:', {
-          role: profile.role,
-          id: session.user.id,
-          auth_uid: await supabase.auth.getUser()
-        })
-
-        console.log('Starting RLS policy tests...')
-
-        // Test RLS on profiles table first
-        const { data: profileTest, error: profileTestError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', session.user.id)
-          .single()
-
-        if (profileTestError) {
-          logSupabaseError('Profile RLS Test', profileTestError)
-          setError('Profile access denied')
-          return
-        }
-
-        console.log('Profile RLS test passed')
-
-        // Test RLS on requests table
-        const { data: requestTest, error: requestTestError } = await supabase
-          .from('requests')
-          .select('id')
-          .limit(1)
-
-        if (requestTestError) {
-          logSupabaseError('Request RLS Test', requestTestError)
-          setError('Request access denied')
-          return
-        }
-
-        console.log('Request RLS test passed')
 
         // Now proceed with main query...
-        console.log('Starting main ticket query...')
-
         // Step 1: Get tickets with explicit columns
         const { data: ticketsData, error: ticketsError } = await supabase
           .from('requests')
