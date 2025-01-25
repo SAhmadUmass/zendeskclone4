@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TicketsTable } from "@/components/support-dashboard/tickets-table"
+import { RecentTickets } from "@/components/support-dashboard/recent-tickets"
 
 // Helper function to get ticket counts by status
 async function getTicketMetrics() {
@@ -64,7 +64,7 @@ export default async function Dashboard() {
       </div>
       <div>
         <h2 className="text-2xl font-bold mb-4">Recent Tickets</h2>
-        <TicketsTable limit={5} />
+        <RecentTickets limit={5} />
       </div>
     </div>
   )
