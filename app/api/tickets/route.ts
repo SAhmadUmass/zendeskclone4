@@ -4,10 +4,16 @@ import { NextResponse } from 'next/server'
 import { PostgrestError } from '@supabase/supabase-js'
 import { Ticket, TicketCreate, validateTicketCreate } from './types'
 
+type Context = {
+  searchParams: { [key: string]: string | string[] | undefined }
+}
+
 // GET /api/tickets - List tickets
 export async function GET(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _request: Request
+  _request: Request,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _context: Context
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -51,7 +57,9 @@ export async function GET(
 
 // POST /api/tickets - Create ticket
 export async function POST(
-  request: Request
+  request: Request,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _context: Context
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
