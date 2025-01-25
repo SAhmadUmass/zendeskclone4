@@ -12,7 +12,8 @@ type Props = {
 
 // GET /api/tickets/[id] - Get single ticket
 export async function GET(
-  request: Request,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _request: Request,
   props: Props
 ) {
   try {
@@ -130,7 +131,8 @@ export async function PUT(
 
 // DELETE /api/tickets/[id] - Delete ticket
 export async function DELETE(
-  request: Request,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _request: Request,
   props: Props
 ) {
   try {
