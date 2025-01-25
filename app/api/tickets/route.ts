@@ -6,6 +6,7 @@ import { Ticket, TicketCreate, validateTicketCreate } from './types'
 
 // GET /api/tickets - List tickets
 export async function GET(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _request: Request
 ) {
   try {
