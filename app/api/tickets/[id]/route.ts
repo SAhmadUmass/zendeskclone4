@@ -6,7 +6,8 @@ import { Ticket, TicketUpdate, validateTicketUpdate } from '../types'
 
 // GET /api/tickets/[id] - Get single ticket
 export async function GET(
-  request: Request,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _request: Request,
   { params }: { params: { id: string } }
 ): Promise<Response> {
   try {
@@ -124,7 +125,8 @@ export async function PUT(
 
 // DELETE /api/tickets/[id] - Delete ticket
 export async function DELETE(
-  request: Request,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _request: Request,
   { params }: { params: { id: string } }
 ): Promise<Response> {
   try {
