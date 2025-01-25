@@ -2,48 +2,50 @@ import { useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
-type RealtimeOptions = {
+interface BaseRecord {
+  id: string | number
+  created_at?: string
+  [key: string]: unknown
+}
+
+type RealtimeOptions<T extends BaseRecord = BaseRecord> = {
   table: string
-  onUpdate?: (payload: RealtimePostgresChangesPayload<any>) => void | Promise<void>
+  onUpdate?: (payload: RealtimePostgresChangesPayload<T>) => void | Promise<void>
   event?: '*' | 'INSERT' | 'UPDATE' | 'DELETE'
   schema?: string
   filter?: string
 }
 
-export function useSupabaseRealtime({
+export function useSupabaseRealtime<T extends BaseRecord = BaseRecord>({
   table,
   onUpdate,
   event = '*',
   schema = 'public',
   filter
-}: RealtimeOptions) {
+}: RealtimeOptions<T>) {
   useEffect(() => {
     const supabase = createClient()
     let channel: RealtimeChannel
 
     const setupSubscription = async () => {
       try {
-        channel = supabase.channel('schema-db-changes', {
-          config: {
-            postgres_changes: {
-              event: event,
-              schema: schema,
-              table: table,
-              filter: filter
-            }
-          }
-        })
+        // Create a channel with a unique name for this table
+        const channelName = `realtime:${schema}:${table}`
+        channel = supabase.channel(channelName)
         
-        const subscription = channel
+        // Subscribe to changes using type assertion for now
+        // This is safe because we know the channel supports postgres_changes
+        type ChannelType = typeof channel & {
+          on(event: 'postgres_changes', 
+             filter: { event: string; schema: string; table: string; filter?: string },
+             callback: (payload: RealtimePostgresChangesPayload<T>) => void): typeof channel
+        }
+        
+        const subscription = (channel as ChannelType)
           .on(
             'postgres_changes',
-            {
-              event: event,
-              schema: schema,
-              table: table,
-              filter: filter
-            },
-            (payload: RealtimePostgresChangesPayload<any>) => {
+            { event, schema, table, filter },
+            (payload: RealtimePostgresChangesPayload<T>) => {
               if (onUpdate) {
                 onUpdate(payload)
               }
