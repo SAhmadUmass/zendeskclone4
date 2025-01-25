@@ -7,16 +7,30 @@ import { createClient } from "@/utils/supabase/client"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { TicketStatus, TicketPriority } from "@/app/api/tickets/types"
 
-interface Ticket {
+// This interface matches the actual shape of data from Supabase
+interface AdminTicket {
   id: string
   title: string
-  status: string
-  priority: string
+  status: TicketStatus
+  priority: TicketPriority
   assigned_to: string | null
   profiles: {
     full_name: string | null
   } | null
+}
+
+// Type for the raw response from Supabase
+type SupabaseTicketResponse = {
+  id: string
+  title: string
+  status: TicketStatus
+  priority: TicketPriority
+  assigned_to: string | null
+  profiles: {
+    full_name: string | null
+  }[] | null
 }
 
 interface SupportStaff {
@@ -25,7 +39,7 @@ interface SupportStaff {
 }
 
 export default function Page() {
-  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [tickets, setTickets] = useState<AdminTicket[]>([])
   const [supportStaff, setSupportStaff] = useState<SupportStaff[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -60,7 +74,13 @@ export default function Page() {
 
         if (staffError) throw staffError
 
-        setTickets(ticketsData || [])
+        // Transform the response to match our AdminTicket interface
+        const transformedTickets: AdminTicket[] = (ticketsData || []).map((ticket: SupabaseTicketResponse) => ({
+          ...ticket,
+          profiles: ticket.profiles?.[0] || null
+        }))
+
+        setTickets(transformedTickets)
         setSupportStaff(staffData || [])
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch data')
