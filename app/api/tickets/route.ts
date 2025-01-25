@@ -11,9 +11,7 @@ export interface RouteSegment {
 // GET /api/tickets - List tickets
 export async function GET(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _request: NextRequest,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _context: RouteSegment
+  _request: NextRequest
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -57,9 +55,7 @@ export async function GET(
 
 // POST /api/tickets - Create ticket
 export async function POST(
-  request: NextRequest,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _context: RouteSegment
+  request: NextRequest
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })

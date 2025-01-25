@@ -15,8 +15,7 @@ export interface RouteSegment {
 export async function GET(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _request: NextRequest,
-  // Destructure only what we need to avoid unused variable warnings
-  { params }: Pick<RouteSegment, 'params'>
+  context: { params: { id: string } }
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -44,7 +43,7 @@ export async function GET(
         created_at,
         updated_at
       `)
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .single()
 
     if (error) {
@@ -70,8 +69,7 @@ export async function GET(
 // PUT /api/tickets/[id] - Update ticket
 export async function PUT(
   request: NextRequest,
-  // Destructure only what we need to avoid unused variable warnings
-  { params }: Pick<RouteSegment, 'params'>
+  context: { params: { id: string } }
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -105,7 +103,7 @@ export async function PUT(
     const { data: ticket, error } = await supabase
       .from('requests')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', context.params.id)
       .select()
       .single()
 
@@ -136,8 +134,7 @@ export async function PUT(
 export async function DELETE(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _request: NextRequest,
-  // Destructure only what we need to avoid unused variable warnings
-  { params }: Pick<RouteSegment, 'params'>
+  context: { params: { id: string } }
 ): Promise<Response> {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -155,7 +152,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('requests')
       .delete()
-      .eq('id', params.id)
+      .eq('id', context.params.id)
 
     if (error) {
       if (error.code === 'PGRST116') {
