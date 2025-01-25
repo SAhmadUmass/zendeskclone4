@@ -1,14 +1,8 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { PostgrestError } from '@supabase/supabase-js'
 import { Ticket, TicketUpdate, validateTicketUpdate } from '../types'
-
-interface RouteContext {
-  params: {
-    id: string
-  }
-}
 
 // GET /api/tickets/[id] - Get single ticket
 export async function GET(
