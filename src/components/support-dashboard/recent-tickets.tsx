@@ -14,7 +14,21 @@ type Ticket = {
   customer: {
     id: string
     full_name: string | null
-  }
+  } | null
+}
+
+interface RawTicket {
+  id: string
+  title: string
+  status: string
+  priority: string
+  assigned_to: string | null
+  created_at: string
+  customer_id: string
+  customer: {
+    id: string
+    full_name: string | null
+  } | null
 }
 
 export function RecentTickets({ limit }: { limit: number }) {
@@ -25,7 +39,7 @@ export function RecentTickets({ limit }: { limit: number }) {
     const fetchTickets = async () => {
       try {
         const supabase = createClient()
-        const { data, error } = await supabase
+        const { data: rawTickets, error } = await supabase
           .from('requests')
           .select(`
             id,
@@ -34,16 +48,32 @@ export function RecentTickets({ limit }: { limit: number }) {
             priority,
             assigned_to,
             created_at,
-            customer:customer_id (
+            customer_id,
+            customer:profiles!customer_id (
               id,
               full_name
             )
           `)
           .order('created_at', { ascending: false })
-          .returns<Ticket[]>()
+          .returns<RawTicket[]>()
 
         if (error) throw error
-        setTickets(data || [])
+
+        // Transform and validate the data
+        const validTickets: Ticket[] = (rawTickets || []).map(ticket => ({
+          id: ticket.id,
+          title: ticket.title,
+          status: ticket.status,
+          priority: ticket.priority,
+          assigned_to: ticket.assigned_to,
+          created_at: ticket.created_at,
+          customer: ticket.customer || {
+            id: ticket.customer_id,
+            full_name: 'Unknown Customer'
+          }
+        }))
+
+        setTickets(validTickets)
       } catch (err) {
         console.error('Error fetching tickets:', err)
       } finally {

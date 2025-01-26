@@ -9,13 +9,19 @@ import { useRouter } from 'next/navigation'
 
 interface CustomerProfile {
   id: string
-  full_name: string
+  full_name: string | null
 }
 
 interface Ticket {
   id: string
   title: string
   customer: CustomerProfile
+}
+
+interface RawTicket {
+  id: string
+  title: string
+  customer: CustomerProfile | null
 }
 
 export default function TicketChatPage({ params }: { params: Promise<{ id: string }> }) {
@@ -28,30 +34,45 @@ export default function TicketChatPage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     async function fetchTicket() {
       try {
-        // First fetch the ticket
+        // First verify auth session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError || !session) {
+          console.error('Auth error:', sessionError)
+          setError('Authentication error - please log in again')
+          router.push('/login')
+          return
+        }
+
+        // Fetch ticket with customer data in a single query
         const { data: ticketData, error: ticketError } = await supabase
           .from('requests')
-          .select('id, title, customer_id')
+          .select(`
+            id,
+            title,
+            customer:profiles!customer_id (
+              id,
+              full_name
+            )
+          `)
           .eq('id', resolvedParams.id)
-          .single()
+          .maybeSingle() as { data: RawTicket | null, error: any }
 
-        if (ticketError) throw ticketError
+        if (ticketError) {
+          console.error('Error fetching ticket:', ticketError)
+          throw ticketError
+        }
 
-        // Then fetch the customer profile
-        const { data: customerData, error: customerError } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .eq('id', ticketData.customer_id)
-          .single()
-
-        if (customerError) throw customerError
+        if (!ticketData) {
+          setError('Ticket not found')
+          return
+        }
         
         setTicket({
           id: ticketData.id,
           title: ticketData.title,
-          customer: {
-            id: customerData.id,
-            full_name: customerData.full_name
+          customer: ticketData.customer || {
+            id: 'unknown',
+            full_name: 'Unknown Customer'
           }
         })
       } catch (err) {
@@ -61,7 +82,7 @@ export default function TicketChatPage({ params }: { params: Promise<{ id: strin
     }
 
     fetchTicket()
-  }, [resolvedParams.id, supabase])
+  }, [resolvedParams.id, supabase, router])
 
   if (error) {
     return (
@@ -98,7 +119,7 @@ export default function TicketChatPage({ params }: { params: Promise<{ id: strin
 
       <Chat
         ticketId={ticket.id}
-        customerName={ticket.customer.full_name}
+        customerName={ticket.customer.full_name || 'Unknown Customer'}
         ticketTitle={ticket.title}
       />
     </div>

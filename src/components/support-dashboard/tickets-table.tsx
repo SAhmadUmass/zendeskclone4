@@ -17,7 +17,7 @@ type Ticket = {
   customer: {
     id: string
     full_name: string | null
-  }
+  } | null
 }
 
 interface TicketsTableProps {
@@ -32,6 +32,10 @@ export function TicketsTable({ tickets = [], loading, limit }: TicketsTableProps
 
   const handleChatClick = (ticketId: string) => {
     router.push(`/support-dashboard/tickets/${ticketId}/chat`)
+  }
+
+  const getCustomerName = (ticket: Ticket) => {
+    return ticket.customer?.full_name || 'Unknown Customer'
   }
 
   const renderTableHeader = () => (
@@ -81,7 +85,7 @@ export function TicketsTable({ tickets = [], loading, limit }: TicketsTableProps
           key={ticket.id} 
           className="hover:bg-muted/50 cursor-pointer"
         >
-          <TableCell>{ticket.customer.full_name || 'Unknown'}</TableCell>
+          <TableCell>{getCustomerName(ticket)}</TableCell>
           <TableCell>{ticket.title}</TableCell>
           <TableCell>
             <Badge variant={ticket.status === "open" ? "default" : "secondary"}>{ticket.status}</Badge>
