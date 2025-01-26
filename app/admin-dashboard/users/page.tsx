@@ -66,25 +66,28 @@ export default function Page() {
 
   const handleConvertToStaff = async () => {
     try {
-      const supabase = createClient()
+      setError(null)
       
-      const { data, error: updateError } = await supabase
-        .from('profiles')
-        .update({ role: 'support' })
-        .eq('email', newStaffEmail)
-        .select()
+      const response = await fetch('/api/admin-dashboard/users/convert-to-staff', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email: newStaffEmail.trim() })
+      })
 
-      if (updateError) throw updateError
+      const result = await response.json()
 
-      if (data && data.length > 0) {
-        // Update local state
-        setUsers(users.map(user => 
-          user.email === newStaffEmail ? { ...user, role: 'support' } : user
-        ))
-        setNewStaffEmail("")
-      } else {
-        setError('User not found')
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to convert user to staff')
       }
+
+      // Update local state
+      setUsers(users.map(user => 
+        user.email === newStaffEmail ? { ...user, role: 'support' } : user
+      ))
+      setNewStaffEmail("")
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to convert user to staff')
     }

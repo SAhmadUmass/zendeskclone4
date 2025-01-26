@@ -1,75 +1,69 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  let response = NextResponse.next({
+export async function middleware(request: NextRequest) {
+  console.log('🔒 [Middleware] Starting...', {
+    path: request.nextUrl.pathname,
+    cookies: request.cookies.getAll().map(c => c.name)
+  })
+
+  let supabaseResponse = NextResponse.next({
     request: {
-      headers: req.headers,
+      headers: request.headers,
     },
   })
 
+  console.log('🔒 [Middleware] Creating Supabase client...')
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value
+        getAll() {
+          return request.cookies.getAll()
         },
-        set(name: string, value: string, options: CookieOptions) {
-          // Set both in the response and the request
-          response.cookies.set({
-            name,
-            value,
-            ...options,
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({
+            request,
           })
-          req.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: CookieOptions) {
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
         },
       },
     }
   )
 
-  // Try to refresh the session
-  const { data: { session }, error } = await supabase.auth.getSession()
-
-  // Add auth headers to the response
-  if (session) {
-    response.headers.set('x-supabase-auth', session.access_token)
-  }
+  console.log('🔒 [Middleware] Getting session...')
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  console.log('🔒 [Middleware] Session result:', { 
+    hasSession: !!user,
+    userId: user?.id
+  })
 
   // Handle authentication for protected routes
-  const isAuthRoute = req.nextUrl.pathname.startsWith('/login')
-  const isProtectedRoute = req.nextUrl.pathname.startsWith('/support-dashboard') || 
-                          req.nextUrl.pathname.startsWith('/customer-dashboard') ||
-                          req.nextUrl.pathname.startsWith('/admin-dashboard')
+  const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
+  const isProtectedRoute = request.nextUrl.pathname.startsWith('/admin-dashboard') ||
+                          request.nextUrl.pathname.startsWith('/support-dashboard') ||
+                          request.nextUrl.pathname.startsWith('/customer-dashboard')
 
-  if (!session && isProtectedRoute) {
-    const redirectUrl = new URL('/login', req.url)
+  console.log('🔒 [Middleware] Route check:', { 
+    isAuthRoute, 
+    isProtectedRoute,
+    needsRedirect: !user && isProtectedRoute
+  })
+
+  if (!user && isProtectedRoute) {
+    const redirectUrl = new URL('/login', request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
-  if (session && isAuthRoute) {
-    // If user is signed in and tries to access auth routes, redirect them
-    const redirectUrl = new URL('/customer-dashboard', req.url)
-    return NextResponse.redirect(redirectUrl)
-  }
-
-  return response
+  return supabaseResponse
 }
 
-// Ensure the middleware is only called for relevant paths
 export const config = {
   matcher: [
     /*
@@ -85,7 +79,7 @@ export const config = {
 
 // Mock cookies for Edge runtime
 export class EdgeStorageAdapter {
-  async set(name: string, value: string, options: CookieOptions) {
+  async set(name: string, value: string, options: any) {
     // Implementation
   }
 
@@ -93,7 +87,7 @@ export class EdgeStorageAdapter {
     return null
   }
 
-  async remove(name: string, options: CookieOptions) {
+  async remove(name: string, options: any) {
     // Implementation
   }
 } 
