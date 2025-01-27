@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createClient } from "@/utils/supabase/client"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
@@ -29,17 +28,19 @@ export default function Page() {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const supabase = createClient()
+        setLoading(true)
+        const response = await fetch('/api/admin-dashboard/priorities', {
+          credentials: 'include'
+        })
         
-        const { data, error: fetchError } = await supabase
-          .from('requests')
-          .select('id, title, status, priority, created_at')
-          .order('created_at', { ascending: false })
+        if (!response.ok) {
+          throw new Error('Failed to fetch tickets')
+        }
 
-        if (fetchError) throw fetchError
-
-        setTickets(data || [])
+        const result = await response.json()
+        setTickets(result.data || [])
       } catch (err) {
+        console.error('Error fetching tickets:', err)
         setError(err instanceof Error ? err.message : 'Failed to fetch tickets')
       } finally {
         setLoading(false)
@@ -51,20 +52,27 @@ export default function Page() {
 
   const handleUpdatePriority = async (ticketId: string, newPriority: Priority) => {
     try {
-      const supabase = createClient()
-      
-      const { error: updateError } = await supabase
-        .from('requests')
-        .update({ priority: newPriority })
-        .eq('id', ticketId)
+      const response = await fetch('/api/admin-dashboard/priorities', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ ticketId, priority: newPriority })
+      })
 
-      if (updateError) throw updateError
+      if (!response.ok) {
+        throw new Error('Failed to update priority')
+      }
+
+      const result = await response.json()
 
       // Update local state
       setTickets(tickets.map(ticket => 
         ticket.id === ticketId ? { ...ticket, priority: newPriority } : ticket
       ))
     } catch (err) {
+      console.error('Error updating priority:', err)
       setError(err instanceof Error ? err.message : 'Failed to update priority')
     }
   }
