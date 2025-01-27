@@ -8,29 +8,50 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import { TicketStatus, TicketPriority } from "@/app/api/tickets/types"
+import { Button } from "@/components/ui/button"
+import { Trash2 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
-// This interface matches the actual shape of data from Supabase
+type DbResult<T> = T extends (...args: any[]) => any
+  ? Awaited<ReturnType<T>>
+  : never
+
+type TicketRow = {
+  id: string
+  title: string
+  status: TicketStatus
+  priority: TicketPriority
+  assigned_to: string | null
+  customer_id: string
+  customer: {
+    full_name: string | null
+  } | null
+  profiles: {
+    id: string
+    full_name: string | null
+  } | null
+}
+
 interface AdminTicket {
   id: string
   title: string
   status: TicketStatus
   priority: TicketPriority
   assigned_to: string | null
+  customer_id: string
+  customer: {
+    full_name: string | null
+  } | null
   profiles: {
     full_name: string | null
   } | null
-}
-
-// Type for the raw response from Supabase
-type SupabaseTicketResponse = {
-  id: string
-  title: string
-  status: TicketStatus
-  priority: TicketPriority
-  assigned_to: string | null
-  profiles: {
-    full_name: string | null
-  }[] | null
 }
 
 interface SupportStaff {
@@ -43,14 +64,16 @@ export default function Page() {
   const [supportStaff, setSupportStaff] = useState<SupportStaff[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [ticketToDelete, setTicketToDelete] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const supabase = createClient()
+        console.log('Supabase client created')
         
-        // Fetch tickets with assignee names
-        const { data: ticketsData, error: ticketsError } = await supabase
+        // Fetch tickets with assignee and customer names
+        const { data: rawTickets, error: ticketsError } = await supabase
           .from('requests')
           .select(`
             id,
@@ -58,31 +81,64 @@ export default function Page() {
             status,
             priority,
             assigned_to,
-            profiles:assigned_to (
+            customer_id,
+            customer:profiles!customer_id (
+              full_name
+            ),
+            profiles:profiles!assigned_to (
+              id,
               full_name
             )
           `)
           .order('created_at', { ascending: false })
 
-        if (ticketsError) throw ticketsError
+        if (ticketsError) {
+          console.error('Tickets fetch error:', ticketsError)
+          throw ticketsError
+        }
 
         // Fetch support staff (users with role 'support')
-        const { data: staffData, error: staffError } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .eq('role', 'support')
+        console.log('Fetching support staff...')
+        const response = await fetch('/api/admin-dashboard/users', {
+          credentials: 'include'
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch support staff')
+        }
 
-        if (staffError) throw staffError
+        const result = await response.json()
+        const staffData = result.data || []
+
+        console.log('Support staff:', staffData)
+        console.log('Raw tickets:', rawTickets)
 
         // Transform the response to match our AdminTicket interface
-        const transformedTickets: AdminTicket[] = (ticketsData || []).map((ticket: SupabaseTicketResponse) => ({
-          ...ticket,
-          profiles: ticket.profiles?.[0] || null
-        }))
+        const transformedTickets = (rawTickets || []).map((rawTicket: any): AdminTicket => {
+          const assignedStaff = staffData.find((staff: SupportStaff) => staff.id === rawTicket.assigned_to)
+          console.log('Processing ticket:', {
+            id: rawTicket.id,
+            assigned_to: rawTicket.assigned_to,
+            staffMatch: assignedStaff?.full_name,
+            customer: rawTicket.customer
+          })
+          
+          return {
+            id: rawTicket.id,
+            title: rawTicket.title,
+            status: rawTicket.status,
+            priority: rawTicket.priority,
+            assigned_to: rawTicket.assigned_to,
+            customer_id: rawTicket.customer_id,
+            customer: rawTicket.customer,
+            profiles: rawTicket.profiles?.[0] || null
+          }
+        })
 
         setTickets(transformedTickets)
         setSupportStaff(staffData || [])
       } catch (err) {
+        console.error('Error details:', err)
         setError(err instanceof Error ? err.message : 'Failed to fetch data')
       } finally {
         setLoading(false)
@@ -94,31 +150,56 @@ export default function Page() {
 
   const handleAssign = async (ticketId: string, staffId: string | null) => {
     try {
-      const supabase = createClient()
-      
-      const { error } = await supabase
-        .from('requests')
-        .update({ assigned_to: staffId })
-        .eq('id', ticketId)
+      const response = await fetch('/api/admin-dashboard/tickets/assign', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ticketId, staffId }),
+        credentials: 'include'
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to assign ticket')
+      }
+
+      const { data } = await response.json()
+      console.log('Server response:', data)
 
       // Update local state
       setTickets(tickets.map(ticket => {
         if (ticket.id === ticketId) {
-          const assignedStaff = supportStaff.find(staff => staff.id === staffId)
           return {
             ...ticket,
-            assigned_to: staffId,
-            profiles: assignedStaff ? {
-              full_name: assignedStaff.full_name
-            } : null
+            assigned_to: data.assigned_to,
+            profiles: data.profiles?.[0] || null // Transform array to single object
           }
         }
         return ticket
       }))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to assign ticket')
+    }
+  }
+
+  const handleDelete = async (ticketId: string) => {
+    try {
+      const response = await fetch(`/api/admin-dashboard/tickets/delete?id=${ticketId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to delete ticket')
+      }
+
+      // Update local state
+      setTickets(tickets.filter(ticket => ticket.id !== ticketId))
+      setTicketToDelete(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete ticket')
     }
   }
 
@@ -142,7 +223,8 @@ export default function Page() {
               <TableHead>Title</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Priority</TableHead>
-              <TableHead>Assigned To</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Assign To</TableHead>
               <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
@@ -152,9 +234,10 @@ export default function Page() {
                 <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                 <TableCell><Skeleton className="h-8 w-[180px]" /></TableCell>
+                <TableCell><Skeleton className="h-8 w-[40px]" /></TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -173,7 +256,8 @@ export default function Page() {
             <TableHead>Title</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Priority</TableHead>
-            <TableHead>Assigned To</TableHead>
+            <TableHead>Customer</TableHead>
+            <TableHead>Assign To</TableHead>
             <TableHead>Action</TableHead>
           </TableRow>
         </TableHeader>
@@ -184,14 +268,19 @@ export default function Page() {
               <TableCell>{ticket.title}</TableCell>
               <TableCell>{ticket.status}</TableCell>
               <TableCell>{ticket.priority}</TableCell>
-              <TableCell>{ticket.profiles?.full_name || "Unassigned"}</TableCell>
+              <TableCell>{ticket.customer?.full_name || "Unknown"}</TableCell>
               <TableCell>
                 <Select 
                   value={ticket.assigned_to || "unassigned"} 
                   onValueChange={(value) => handleAssign(ticket.id, value === "unassigned" ? null : value)}
                 >
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Assign to..." />
+                    <SelectValue>
+                      {(() => {
+                        const assignedStaff = supportStaff.find(s => s.id === ticket.assigned_to)
+                        return ticket.assigned_to && assignedStaff ? assignedStaff.full_name : "Unassigned"
+                      })()}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="unassigned">Unassign</SelectItem>
@@ -202,6 +291,39 @@ export default function Page() {
                     ))}
                   </SelectContent>
                 </Select>
+              </TableCell>
+              <TableCell>
+                <Dialog open={ticketToDelete === ticket.id} onOpenChange={(open) => !open && setTicketToDelete(null)}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="text-destructive hover:text-destructive/90"
+                      onClick={() => setTicketToDelete(ticket.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Delete Ticket</DialogTitle>
+                      <DialogDescription>
+                        Are you sure you want to delete this ticket? This action cannot be undone.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-3 mt-4">
+                      <Button variant="outline" onClick={() => setTicketToDelete(null)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        variant="destructive"
+                        onClick={() => handleDelete(ticket.id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </TableCell>
             </TableRow>
           ))}
