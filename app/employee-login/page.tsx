@@ -1,6 +1,7 @@
 'use client'
 
-import { useFormState, useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
+import { useFormStatus } from 'react-dom'
 import Link from 'next/link'
 import { login } from './actions'
 
@@ -19,7 +20,7 @@ function LoginButton() {
 }
 
 export default function EmployeeLoginPage() {
-  const [state, formAction] = useFormState(login, { error: null })
+  const [state, formAction] = useActionState(login, { error: null })
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">

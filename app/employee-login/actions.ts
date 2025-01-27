@@ -7,47 +7,42 @@ import { cookies } from 'next/headers'
 
 export async function login(prevState: { error: string | null }, formData: FormData) {
   try {
-    const cookieStore = cookies()
     const supabase = await createClient()
 
-    const data = {
+    // Authenticate user
+    const { error: signInError, data: { user } } = await supabase.auth.signInWithPassword({
       email: formData.get('email') as string,
       password: formData.get('password') as string,
-    }
-
-    const { error: signInError, data: { user } } = await supabase.auth.signInWithPassword(data)
+    })
 
     if (signInError) {
       return { error: signInError.message }
     }
 
-    // Fetch user's role from profiles table
-    const { data: profile, error: profileError } = await supabase
+    if (!user) {
+      return { error: 'Authentication failed' }
+    }
+
+    // Get user role
+    const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', user?.id)
+      .eq('id', user.id)
       .single()
 
-    if (profileError) {
-      return { error: profileError.message }
-    }
-
-    // Check if user has appropriate role
+    // Validate role
     if (!profile?.role || !['admin', 'support'].includes(profile.role)) {
-      return { error: 'Unauthorized access. Employee portal is only for admin and support staff.' }
+      return { error: 'Access denied. Employee portal is for staff only.' }
     }
 
+    // Clear cache and redirect
     revalidatePath('/', 'layout')
-
-    // Redirect based on role
-    if (profile.role === 'admin') {
-      redirect('/admin-dashboard')
-    } else {
-      redirect('/support-dashboard')
+    redirect(profile.role === 'admin' ? '/admin-dashboard' : '/support-dashboard')
+  } catch (error) {
+    // Only log actual errors, not redirect "errors"
+    if (!(error instanceof Error && error.message === 'NEXT_REDIRECT')) {
+      console.error('Login error:', error)
     }
-
-    return { error: null }
-  } catch (err) {
-    return { error: err instanceof Error ? err.message : 'An error occurred during login' }
+    throw error // Let Next.js handle redirects
   }
 } 
