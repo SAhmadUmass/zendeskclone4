@@ -106,21 +106,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold tracking-tight">Support Desk</h1>
-          <p className="mt-2 text-lg text-muted-foreground">Your customer support solution</p>
+          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+            Support Desk
+          </h1>
+          <p className="mt-2 text-lg text-gray-600">Your customer support solution</p>
         </div>
 
         {/* Main Card */}
-        <div className="bg-card p-8 rounded-lg shadow-lg border">
+        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-white/50 space-y-6">
           <div className="space-y-2 text-center">
-            <h2 className="text-2xl font-semibold tracking-tight">
+            <h2 className="text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
               {isSignUp ? 'Create your account' : 'Welcome back'}
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-gray-600">
               {isSignUp 
                 ? 'Start your journey with us today'
                 : 'Sign in to manage your support tickets'}
@@ -128,7 +130,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="mt-4 p-4 text-sm text-destructive bg-destructive/10 rounded-lg flex items-center gap-2">
+            <div className="p-4 text-sm text-red-600 bg-red-50 rounded-lg flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
@@ -137,7 +139,7 @@ export default function LoginPage() {
           )}
 
           {success && (
-            <div className="mt-4 p-4 text-sm text-green-600 bg-green-100 rounded-lg flex items-center gap-2">
+            <div className="p-4 text-sm text-green-600 bg-green-50 rounded-lg flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
@@ -145,10 +147,10 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
+              <div>
+                <Label htmlFor="email" className="text-gray-700">Email address</Label>
                 <Input
                   id="email"
                   name="email"
@@ -156,11 +158,12 @@ export default function LoginPage() {
                   autoComplete="email"
                   required
                   disabled={isLoading}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+              <div>
+                <Label htmlFor="password" className="text-gray-700">Password</Label>
                 <Input
                   id="password"
                   name="password"
@@ -168,12 +171,13 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   required
                   disabled={isLoading}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
               {isSignUp && (
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
+                <div>
+                  <Label htmlFor="fullName" className="text-gray-700">Full Name</Label>
                   <Input
                     id="fullName"
                     name="fullName"
@@ -181,6 +185,7 @@ export default function LoginPage() {
                     autoComplete="name"
                     required
                     disabled={isLoading}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               )}
@@ -189,7 +194,7 @@ export default function LoginPage() {
             <div className="space-y-4">
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -205,7 +210,7 @@ export default function LoginPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 onClick={() => setIsSignUp(!isSignUp)}
                 disabled={isLoading}
               >
@@ -218,19 +223,21 @@ export default function LoginPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full"
+                      className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       disabled={isLoading}
                     >
                       Forgot password?
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="bg-white/95 backdrop-blur-sm">
                     <DialogHeader>
-                      <DialogTitle>Reset Password</DialogTitle>
+                      <DialogTitle className="text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+                        Reset Password
+                      </DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handlePasswordReset} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="resetEmail">Email address</Label>
+                      <div>
+                        <Label htmlFor="resetEmail" className="text-gray-700">Email address</Label>
                         <Input
                           id="resetEmail"
                           name="resetEmail"
@@ -238,17 +245,18 @@ export default function LoginPage() {
                           placeholder="Enter your email"
                           required
                           disabled={isResetLoading}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
                       <Button
                         type="submit"
-                        className="w-full"
+                        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                         disabled={isResetLoading}
                       >
                         {isResetLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            <span>Sending...</span>
+                            <span>Please wait...</span>
                           </>
                         ) : (
                           'Send Reset Link'
@@ -262,14 +270,14 @@ export default function LoginPage() {
           </form>
         </div>
 
-        {/* Social Proof */}
+        {/* Return to Home Link */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-muted-foreground">Trusted by companies worldwide</p>
-          <div className="mt-4 flex justify-center space-x-6">
-            <div className="w-8 h-8 bg-muted rounded-full"></div>
-            <div className="w-8 h-8 bg-muted rounded-full"></div>
-            <div className="w-8 h-8 bg-muted rounded-full"></div>
-          </div>
+          <a
+            href="/"
+            className="text-sm text-blue-600 hover:text-blue-700 transition-colors duration-200"
+          >
+            ← Return to Home
+          </a>
         </div>
       </div>
     </div>
