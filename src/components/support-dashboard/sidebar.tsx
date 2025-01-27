@@ -2,9 +2,8 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Ticket, Users, BarChart2, Settings, LogOut } from "lucide-react"
-import { createClient } from "@/utils/supabase/client"
-import { useRouter } from "next/navigation"
+import { LayoutDashboard, Ticket, Users, BarChart2, Settings } from "lucide-react"
+import { SignOutForm } from "@/components/shared/sign-out-button"
 
 const navItems = [
   { name: "Dashboard", href: "/support-dashboard", icon: LayoutDashboard },
@@ -16,13 +15,6 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const router = useRouter()
-  const supabase = createClient()
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
 
   return (
     <aside className="bg-white w-64 h-screen flex flex-col border-r">
@@ -47,13 +39,7 @@ export function Sidebar() {
         </ul>
       </nav>
       <div className="p-2">
-        <button
-          onClick={handleSignOut}
-          className="flex items-center w-full p-2 rounded-lg hover:bg-gray-100"
-        >
-          <LogOut className="w-6 h-6 mr-3" />
-          Sign Out
-        </button>
+        <SignOutForm />
       </div>
     </aside>
   )
