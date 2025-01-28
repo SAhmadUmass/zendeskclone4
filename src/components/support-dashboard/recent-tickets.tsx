@@ -29,17 +29,44 @@ interface RawTicket {
     id: string
     full_name: string | null
   } | null
+  assignee: {
+    id: string
+    full_name: string | null
+    role: string
+  } | null
 }
 
 export function RecentTickets({ limit }: { limit: number }) {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchTickets = async () => {
       try {
+        setError(null)
         const supabase = createClient()
-        const { data: rawTickets, error } = await supabase
+        
+        // Get current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError) throw new Error('Failed to get user: ' + userError.message)
+        if (!user) throw new Error('No authenticated user found')
+
+        // Get user's role from profiles
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        
+        if (profileError) throw new Error('Failed to get user profile: ' + profileError.message)
+        if (!profile) throw new Error('No profile found for user')
+        if (!['admin', 'support'].includes(profile.role)) {
+          throw new Error('User does not have permission to view tickets')
+        }
+
+        // Fetch tickets assigned to current user
+        const { data: rawTickets, error: ticketsError } = await supabase
           .from('requests')
           .select(`
             id,
@@ -52,30 +79,39 @@ export function RecentTickets({ limit }: { limit: number }) {
             customer:profiles!customer_id (
               id,
               full_name
+            ),
+            assignee:profiles!assigned_to (
+              id,
+              full_name,
+              role
             )
           `)
+          .eq('assigned_to', user.id)
           .order('created_at', { ascending: false })
           .returns<RawTicket[]>()
 
-        if (error) throw error
+        if (ticketsError) throw new Error('Failed to fetch tickets: ' + ticketsError.message)
+        if (!rawTickets) throw new Error('No tickets data received')
 
         // Transform and validate the data
-        const validTickets: Ticket[] = (rawTickets || []).map(ticket => ({
+        const validTickets: Ticket[] = rawTickets.map(ticket => ({
           id: ticket.id,
           title: ticket.title,
           status: ticket.status,
           priority: ticket.priority,
-          assigned_to: ticket.assigned_to,
+          assigned_to: ticket.assignee?.full_name || 'Unassigned',
           created_at: ticket.created_at,
-          customer: ticket.customer || {
-            id: ticket.customer_id,
-            full_name: 'Unknown Customer'
+          customer: {
+            id: ticket.customer?.id || ticket.customer_id,
+            full_name: ticket.customer?.full_name || 'Unknown Customer'
           }
         }))
 
         setTickets(validTickets)
       } catch (err) {
-        console.error('Error fetching tickets:', err)
+        console.error('Error in RecentTickets:', err)
+        setError(err instanceof Error ? err.message : 'An unknown error occurred')
+        setTickets([])
       } finally {
         setLoading(false)
       }
@@ -83,6 +119,14 @@ export function RecentTickets({ limit }: { limit: number }) {
 
     fetchTickets()
   }, [])
+
+  if (error) {
+    return (
+      <div className="text-red-500 p-4 rounded-md bg-red-50">
+        Error: {error}
+      </div>
+    )
+  }
 
   return <TicketsTable tickets={tickets} loading={loading} limit={limit} />
 } 

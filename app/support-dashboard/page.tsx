@@ -63,7 +63,7 @@ export default async function Dashboard() {
         </Card>
       </div>
       <div>
-        <h2 className="text-2xl font-bold mb-4">Recent Tickets</h2>
+        <h2 className="text-2xl font-bold mb-4">Assigned Tickets</h2>
         <RecentTickets limit={5} />
       </div>
     </div>
