@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from 'react'
 import { Chat } from '@/components/support-dashboard/Chat'
+import { StatusDropdown } from '@/components/support-dashboard/StatusDropdown'
 import { createClient } from '@/utils/supabase/client'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
@@ -15,12 +16,14 @@ interface CustomerProfile {
 interface Ticket {
   id: string
   title: string
+  status: string
   customer: CustomerProfile
 }
 
 interface RawTicket {
   id: string
   title: string
+  status: string
   customer: CustomerProfile | null
 }
 
@@ -49,6 +52,7 @@ export default function TicketChatPage({ params }: { params: Promise<{ id: strin
           .select(`
             id,
             title,
+            status,
             customer:profiles!customer_id (
               id,
               full_name
@@ -70,6 +74,7 @@ export default function TicketChatPage({ params }: { params: Promise<{ id: strin
         setTicket({
           id: ticketData.id,
           title: ticketData.title,
+          status: ticketData.status,
           customer: ticketData.customer || {
             id: 'unknown',
             full_name: 'Unknown Customer'
@@ -83,6 +88,12 @@ export default function TicketChatPage({ params }: { params: Promise<{ id: strin
 
     fetchTicket()
   }, [resolvedParams.id, supabase, router])
+
+  const handleStatusChange = (newStatus: string) => {
+    if (ticket) {
+      setTicket({ ...ticket, status: newStatus })
+    }
+  }
 
   if (error) {
     return (
@@ -122,6 +133,14 @@ export default function TicketChatPage({ params }: { params: Promise<{ id: strin
         customerName={ticket.customer.full_name || 'Unknown Customer'}
         ticketTitle={ticket.title}
       />
+
+      <div className="mt-6">
+        <StatusDropdown
+          ticketId={ticket.id}
+          initialStatus={ticket.status}
+          onStatusChange={handleStatusChange}
+        />
+      </div>
     </div>
   )
 } 
