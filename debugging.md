@@ -1,15 +1,15 @@
-Below is a recommended step-by-step plan to tackle the issues we’ve identified, broken into smaller tasks for a junior developer. Where code is relevant, brief pseudocode is included—feel free to adapt it as actual code when you implement each step.
+Below is a recommended step-by-step plan to tackle the issues we've identified, broken into smaller tasks for a junior developer. Where code is relevant, brief pseudocode is included—feel free to adapt it as actual code when you implement each step.
 
 --------------------------------------------------------------------------------
 1. Fix the Broken Label Import in app/login/page.tsx
 --------------------------------------------------------------------------------
-• Objective: Ensure that the “Label” component is imported properly.  
+• Objective: Ensure that the "Label" component is imported properly.  
 • Location: app/login/page.tsx  
 
 Steps:  
 1. Open app/login/page.tsx.  
 2. Locate the incomplete import statement for the Label component.  
-3. Replace it with a proper import path (for example, "src/components/ui/label" if that’s where your Label component resides).  
+3. Replace it with a proper import path (for example, "src/components/ui/label" if that's where your Label component resides).  
 
 Pseudocode (just conceptual, not actual code):
 --------------------------------------------------------------------------------
@@ -19,14 +19,14 @@ import { Label } from "@/components/ui/label"
 --------------------------------------------------------------------------------
 2. Confirm the Correct Supabase Client Import (Server vs. Client)
 --------------------------------------------------------------------------------
-• Objective: Ensure you’re using the correct createClient version.  
+• Objective: Ensure you're using the correct createClient version.  
 • Locations:  
    – In app/login/page.tsx (client component), you likely need utils/supabase/client.ts.  
-   – In server components or middleware, you use utils/supabase/server.ts.  
+   – In server components or middleware, you use src/utils/supabase/server.ts.  
 
 Steps:  
 1. Check the top of app/login/page.tsx.  
-2. Confirm that the statement createClient() references your “client” version (createBrowserClient) from utils/supabase/client.ts.  
+2. Confirm that the statement createClient() references your "client" version (createBrowserClient) from utils/supabase/client.ts.  
 3. If you see the server import, swap it to point to the correct file.  
 
 Pseudocode approach:
@@ -44,7 +44,7 @@ import { createClient } from "@/utils/supabase/client"
 • Potential File: Create a button in a top-level layout or a new page (e.g. /logout) or a separate sign-out file.  
 
 Steps:  
-1. Decide where the sign-out button or link will exist (e.g., a “Logout” button in a nav bar).  
+1. Decide where the sign-out button or link will exist (e.g., a "Logout" button in a nav bar).  
 2. Internally, it calls supabase.auth.signOut(), clears cookies if needed, and redirects users to /login.  
 
 Pseudocode for sign-out logic:
@@ -81,11 +81,11 @@ catch (error) {
 --------------------------------------------------------------------------------
 5. Role-Based or Additional Authorization in Middleware
 --------------------------------------------------------------------------------
-• Objective: Plan for advanced route protection, such as an “admin” role.  
+• Objective: Plan for advanced route protection, such as an "admin" role.  
 • Location: middleware.ts  
 
 Steps:  
-1. In your middleware.ts, after you get the user object from supabase.auth.getUser(), you can query your “profiles” table to confirm the user’s role.  
+1. In your middleware.ts, after you get the user object from supabase.auth.getUser(), you can query your "profiles" table to confirm the user's role.  
 2. If they lack the required role, redirect them to a different route or show an error.  
 
 Pseudo-outline:
@@ -135,14 +135,14 @@ describe("Login page", () => {
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
-8. Ensure “Dark Mode” Toggle or Class is Functional (Optional Enhancement)
+8. Ensure "Dark Mode" Toggle or Class is Functional (Optional Enhancement)
 --------------------------------------------------------------------------------
 • Objective: If you want a switch for light/dark mode.  
 • Location: Possibly in RootLayout (src/app/layout.tsx).  
 
 Steps:  
 1. Implement a small toggle that adds the .dark class to <html> or <body>.  
-2. Verify Tailwind’s “darkMode: class” is recognized (already set in tailwind.config.ts).  
+2. Verify Tailwind's "darkMode: class" is recognized (already set in tailwind.config.ts).  
 
 Example logic (pseudocode):
 --------------------------------------------------------------------------------
@@ -152,14 +152,14 @@ function toggleDarkMode() {
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
-9. Validate or Clean Up Hardcoded “role: customer”
+9. Validate or Clean Up Hardcoded "role: customer"
 --------------------------------------------------------------------------------
 • Objective: If your project has multiple roles, make the assignment flexible.  
-• Location: app/login/page.tsx, where you insert { role: "customer" } into the “profiles” table.  
+• Location: app/login/page.tsx, where you insert { role: "customer" } into the "profiles" table.  
 
 Steps:  
-1. Decide if “customer” is the only role you need or if you might have “admin,” “support,” etc.  
-2. If multiple roles are needed, either choose roles programmatically or let the user pick from a drop-down if that’s your plan.  
+1. Decide if "customer" is the only role you need or if you might have "admin," "support," etc.  
+2. If multiple roles are needed, either choose roles programmatically or let the user pick from a drop-down if that's your plan.  
 
 --------------------------------------------------------------------------------
 10. Final Cleanup and Refactoring
@@ -170,7 +170,7 @@ Steps:
 Steps:  
 1. Run yarn lint or npm run lint to detect unused imports or variables.  
 2. Verify all references to your new or updated files (like label import fix).  
-3. Double-check your file paths: “@/utils/supabase/client” vs. “@/utils/supabase/server” are correct.  
+3. Double-check your file paths: "@/utils/supabase/client" vs. "@/utils/supabase/server" are correct.  
 
 --------------------------------------------------------------------------------
 
@@ -179,9 +179,9 @@ Important Files to Keep in Mind
 • app/login/page.tsx (login, signup logic, Label import fix)  
 • middleware.ts (authentication checks, potential role-based checks)  
 • utils/supabase/client.ts (Supabase client for client components)  
-• utils/supabase/server.ts (Supabase client for server components and SSR)  
+• src/utils/supabase/server.ts (Supabase client for server components and SSR)  
 • src/app/layout.tsx (root layout, potential dark mode toggle)  
 • tailwind.config.ts (dark mode config, theming)  
 • next.config.ts (can place environment variable checks or other config as needed)  
 
-By following these steps and tackling the changes in smaller chunks, you’ll end up with a cleaner, more robust codebase that properly handles user sessions, environment variables, error states, theming, and more. Good luck!
+By following these steps and tackling the changes in smaller chunks, you'll end up with a cleaner, more robust codebase that properly handles user sessions, environment variables, error states, theming, and more. Good luck!

@@ -1,6 +1,6 @@
 # Step-by-Step Plan for Integrating Supabase into Your Admin Dashboard
 
-Below is a comprehensive series of atomic steps to guide a junior developer through connecting the `admin-dashboard` pages to Supabase. This plan assumes you’re primarily querying Supabase directly from your components. Additionally, you might create custom API routes in special cases that require more complex logic or external integrations.
+Below is a comprehensive series of atomic steps to guide a junior developer through connecting the `admin-dashboard` pages to Supabase. This plan assumes you're primarily querying Supabase directly from your components. Additionally, you might create custom API routes in special cases that require more complex logic or external integrations.
 
 ---
 
@@ -24,7 +24,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ## 2. Validate Database Tables and RLS Policies
 
-**Objective:** Confirm that your Supabase project has the required tables (e.g., “requests,” “profiles,” “customers,” “users,” etc.) and that Row-Level Security (RLS) is in place.
+**Objective:** Confirm that your Supabase project has the required tables (e.g., "requests," "profiles," "customers," "users," etc.) and that Row-Level Security (RLS) is in place.
 
 **Steps:**
 
@@ -35,7 +35,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    - For the admin dashboard, you might need additional tables such as `support_staff`, `roles`, etc.
   
 3. **Configure RLS Policies:**
-   - Ensure RLS policies are defined to restrict data access based on user roles (e.g., “admin,” “support,” “customer”).
+   - Ensure RLS policies are defined to restrict data access based on user roles ("admin," "support," "customer").
    - Example policies:
      - **Support Staff** can view and manage tickets assigned to them.
      - **Admins** have full access to all data.
@@ -47,7 +47,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ## 3. Decide Which Pages Will Query Supabase Directly
 
-**Objective:** Identify where you’ll fetch data within the admin dashboard.
+**Objective:** Identify where you'll fetch data within the admin dashboard.
 
 **Admin Dashboard Pages:**
 
@@ -77,7 +77,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 **Files to Reference:**
 
 - `utils/supabase/client.ts` (for client-side components).
-- `utils/supabase/server.ts` (for server-side queries, Next.js server components).
+- `src/utils/supabase/server.ts` (for server-side queries, Next.js server components).
 
 **Example Pseudocode (Client Usage):**
 
@@ -109,7 +109,7 @@ function MyClientComponent() {
 **Steps:**
 
 1. **Identify Component Type:**
-   - Add `"use client"` directive at the top of client components.
+   - Add "use client" directive at the top of client components.
   
 2. **Instantiate Supabase Client Accordingly:**
    - Use `createClient` from `client.ts` for client components.
@@ -212,13 +212,13 @@ async function getTicketMetrics() {
 **Steps:**
 
 1. **Log in as Different Roles:**
-   - Test as an “admin,” “support,” and “customer” to verify access levels.
+   - Test as an "admin," "support," and "customer" to verify access levels.
 
 2. **Confirm Data Visibility:**
    - Ensure each role can only access the data they're permitted to view or modify.
   
 3. **Check for Permission Errors:**
-   - Monitor browser console and Supabase logs for any “permission denied” errors.
+   - Monitor browser console and Supabase logs for any "permission denied" errors.
 
 ---
 
@@ -229,7 +229,7 @@ async function getTicketMetrics() {
 **Steps:**
 
 1. **Set Up Subscriptions:**
-   - Use Supabase’s real-time features to listen for changes in relevant tables (e.g., `requests`, `messages`).
+   - Use Supabase's real-time features to listen for changes in relevant tables (e.g., `requests`, `messages`).
 
 2. **Update UI in Real-Time:**
    - Reflect changes immediately in the UI without requiring a page refresh.
@@ -302,7 +302,7 @@ const channel = supabase
 
 - `app/admin-dashboard/*` (main admin dashboard pages)
 - `utils/supabase/client.ts` or `supabase/functions/_shared/supabaseClient.ts` (Supabase client for client components)
-- `utils/supabase/server.ts` or `supabase/functions/_shared/supabaseServer.ts` (Supabase client for server components)
+- `src/utils/supabase/server.ts` or `supabase/functions/_shared/supabaseServer.ts` (Supabase client for server components)
 - `app/api/admin-dashboard/*` (custom REST endpoints for admin operations)
 - `.env.local` (Supabase project URL and keys)
 - Supabase Dashboard (table schemas, RLS policies, logs)

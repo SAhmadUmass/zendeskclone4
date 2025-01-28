@@ -145,7 +145,7 @@ Certainly! Below is a comprehensive step-by-step plan broken down into atomic ta
       ```
 
   - **Server-Side Client:**
-    - **Critical File:** `utils/supabase/server.ts`
+    - **Critical File:** `src/utils/supabase/server.ts`
     
     - **Ensure Initialization Using Service Role Key:**
       ```typescript
@@ -329,7 +329,7 @@ Certainly! Below is a comprehensive step-by-step plan broken down into atomic ta
 
 - **c. Update Supabase Client to Use Service Role for Server-Side Operations:**
   
-  - **Critical File:** `utils/supabase/server.ts`
+  - **Critical File:** `src/utils/supabase/server.ts`
   
   - **Action:**
     - Ensure that server-side operations use the `SUPABASE_SERVICE_ROLE_KEY` for elevated permissions where necessary.
@@ -502,7 +502,7 @@ Certainly! Below is a comprehensive step-by-step plan broken down into atomic ta
 |---------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
 | `src/backend/main.sql`                            | Defines the `messages` table schema and RLS policies.                                                     |
 | `utils/supabase/client.ts`                        | Initializes the Supabase client for client-side components.                                               |
-| `utils/supabase/server.ts`                        | Initializes the Supabase client for server-side operations.                                               |
+| `src/utils/supabase/server.ts`                        | Initializes the Supabase client for server-side operations.                                               |
 | `middleware.ts`                                   | Implements route protection to ensure only authorized users can access chat functionalities.              |
 | `app/customer-dashboard/tickets/page.tsx`         | Renders the tickets list and handles ticket selection to navigate to the chat interface.                   |
 | `app/customer-dashboard/tickets/[id]/chat/page.tsx`| Dynamic route that renders the `Chat` component for a specific ticket based on `ticketId`.                  |

@@ -38,7 +38,7 @@ export async function withAuth<T = undefined>(
       )
     }
 
-    return handler(request, supabase, params)
+    return await handler(request, supabase, params)
   } catch (error) {
     console.error('Server error:', error)
     

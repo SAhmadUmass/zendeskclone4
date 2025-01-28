@@ -6,6 +6,8 @@ import { NextResponse } from 'next/server'
 export async function GET() {
   try {
     const cookieStore = await cookies()
+    let response = NextResponse.next()
+    
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -16,10 +18,16 @@ export async function GET() {
           },
           setAll(cookiesToSet) {
             try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              )
-            } catch {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                response.cookies.set(name, value, {
+                  ...options,
+                  httpOnly: true,
+                  secure: process.env.NODE_ENV === 'production',
+                  sameSite: 'lax',
+                })
+              })
+            } catch (error) {
+              console.error('Cookie setting error:', error)
               // The `setAll` method was called from a Server Component.
               // This can be ignored if you have middleware refreshing
               // user sessions.

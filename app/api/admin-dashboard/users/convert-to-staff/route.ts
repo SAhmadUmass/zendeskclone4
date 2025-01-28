@@ -8,6 +8,8 @@ export async function POST(request: Request) {
     console.log('1. Starting auth process...')
     
     const cookieStore = await cookies()
+    let response = NextResponse.next()
+    
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -18,13 +20,16 @@ export async function POST(request: Request) {
           },
           setAll(cookiesToSet) {
             try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              )
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
+              cookiesToSet.forEach(({ name, value, options }) => {
+                response.cookies.set(name, value, {
+                  ...options,
+                  httpOnly: true,
+                  secure: process.env.NODE_ENV === 'production',
+                  sameSite: 'lax',
+                })
+              })
+            } catch (error) {
+              console.error('Cookie setting error:', error)
             }
           },
         },
@@ -39,10 +44,18 @@ export async function POST(request: Request) {
       error: userError ? { message: userError.message, status: userError.status } : null 
     })
 
-    if (userError || !user) {
-      console.error('4. Auth error:', userError || 'No user found')
+    if (userError) {
+      console.error('4. Auth error:', userError)
       return NextResponse.json(
-        { error: 'Authentication error', details: userError?.message || 'No user found' },
+        { error: 'Authentication error', details: userError.message },
+        { status: 401 }
+      )
+    }
+
+    if (!user) {
+      console.error('4. No user found in session')
+      return NextResponse.json(
+        { error: 'Authentication error', details: 'No user found in session' },
         { status: 401 }
       )
     }
@@ -56,7 +69,7 @@ export async function POST(request: Request) {
     console.log('5. Checking admin role...')
     const { data: profile, error: profileError } = await adminClient
       .from('profiles')
-      .select('role')
+      .select('role, email')
       .eq('id', user.id)
       .single()
     
@@ -74,10 +87,21 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!profile || profile.role !== 'admin') {
-      console.error('8. Not admin. User role:', profile?.role)
+    if (!profile) {
+      console.error('8. No profile found for user:', user.id)
       return NextResponse.json(
-        { error: 'Forbidden - Admin access required' },
+        { error: 'Profile not found', details: 'User profile does not exist' },
+        { status: 404 }
+      )
+    }
+
+    if (profile.role !== 'admin') {
+      console.error('8. Not admin. User role:', profile.role)
+      return NextResponse.json(
+        { 
+          error: 'Forbidden - Admin access required',
+          details: `User has role '${profile.role}' but needs 'admin'`
+        },
         { status: 403 }
       )
     }
@@ -89,6 +113,14 @@ export async function POST(request: Request) {
     if (!email) {
       return NextResponse.json(
         { error: 'Email is required' },
+        { status: 400 }
+      )
+    }
+
+    // Prevent admin from modifying their own role
+    if (email.toLowerCase() === profile.email?.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'Cannot modify your own role' },
         { status: 400 }
       )
     }
@@ -110,7 +142,7 @@ export async function POST(request: Request) {
 
     if (!data || data.length === 0) {
       return NextResponse.json(
-        { error: 'User not found' },
+        { error: 'User not found', details: 'No user found with the provided email' },
         { status: 404 }
       )
     }
@@ -120,7 +152,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('13. Fatal error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

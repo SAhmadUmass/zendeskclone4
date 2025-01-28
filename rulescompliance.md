@@ -4,7 +4,7 @@ Based on the provided code snippets and context, here are the areas where the Ne
 
 ---
 
-### 1. `utils/supabase/server.ts`
+### 1. `src/utils/supabase/server.ts`
 
 **Issue: Usage of Deprecated `get` and `set` Methods**
 
@@ -12,7 +12,7 @@ According to the cursor rules and the Next.js Supabase guidelines, when using Su
 
 **Current Code:**
 
-```typescript:utils/supabase/server.ts
+```typescript:src/utils/supabase/server.ts
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { config as appConfig } from '@/lib/config'
@@ -61,7 +61,7 @@ Update the `cookies` configuration to use `getAll` and `setAll` methods as per t
 
 **Corrected Code:**
 
-```typescript:utils/supabase/server.ts
+```typescript:src/utils/supabase/server.ts
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { config as appConfig } from '@/lib/config'

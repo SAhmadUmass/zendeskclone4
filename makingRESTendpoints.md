@@ -1,6 +1,6 @@
 **Plan: Implement Basic REST API Endpoints (Atomic Steps)**
 
-Below is a step-by-step outline for a junior developer to create Basic REST API endpoints in a Next.js + Supabase project. You won’t see actual code here, just high-level guidance and optional pseudocode. Where code might be helpful, it’s mentioned in a generic format without line numbers.
+Below is a step-by-step outline for a junior developer to create Basic REST API endpoints in a Next.js + Supabase project. You won't see actual code here, just high-level guidance and optional pseudocode. Where code might be helpful, it's mentioned in a generic format without line numbers.
 
 ---
 
@@ -9,7 +9,7 @@ Below is a step-by-step outline for a junior developer to create Basic REST API 
 • Decide the resources you will expose via your REST API. For example:  
   – /tickets for Ticket CRUD (Create, Read, Update, Delete).  
   – /users (if you need a formal user management endpoint).  
-  – /auth (optional, if you want custom routes for authentication—though Supabase’s built-in auth may suffice).  
+  – /auth (optional, if you want custom routes for authentication—though Supabase's built-in auth may suffice).  
 
 • Confirm which fields each resource needs (e.g., title, description, priority for tickets).
 
@@ -39,18 +39,18 @@ Below is a step-by-step outline for a junior developer to create Basic REST API 
   4. Return a JSON response (ticket data or an error).  
 
 • Critical Files:  
-  – utils/supabase/server.ts or a similar server-side client utility.  
+  – src/utils/supabase/server.ts or a similar server-side client utility.  
   – middleware.ts for any global or role-based checks if you prefer a centralized approach.
 
 ---
 
 ## 4. Apply Row-Level Security (RLS) Policies If Needed
 
-• If you only want certain roles to access or modify data, confirm that your Supabase “requests” (or “tickets”) table has the correct RLS policies.  
+• If you only want certain roles to access or modify data, confirm that your Supabase "requests" (or "tickets") table has the correct RLS policies.  
 • Typical checks:  
   – Owners can only see or edit their own tickets.  
-  – “support” role can see or edit tickets assigned to them.  
-  – “admin” can see or edit all tickets.  
+  – "support" role can see or edit tickets assigned to them.  
+  – "admin" can see or edit all tickets.  
 
 • Optional Pseudocode for a policy idea (no real code):
   
@@ -76,8 +76,8 @@ Below is a step-by-step outline for a junior developer to create Basic REST API 
   – PUT /api/tickets/123 → Should update ticket #123 if the user is authorized.  
   – DELETE /api/tickets/123 → Should remove ticket #123 if the user is authorized (optional).  
 
-• Make sure RLS is correctly disallowing data that shouldn’t be returned.  
-• Double-check that errors come back with helpful messages (e.g., “Unauthorized,” “Not Found,” “Invalid Input,” etc.).
+• Make sure RLS is correctly disallowing data that shouldn't be returned.  
+• Double-check that errors come back with helpful messages (e.g., "Unauthorized," "Not Found," "Invalid Input," etc.).
 
 ---
 
@@ -88,14 +88,14 @@ Below is a step-by-step outline for a junior developer to create Basic REST API 
   2. The payload shape (fields required for POST or PUT).  
   3. The possible responses (success and error).  
 
-• Put this in your project’s README, a dedicated API.md file, or any wiki. This makes life easier for future devs or third-party integrations.
+• Put this in your project's README, a dedicated API.md file, or any wiki. This makes life easier for future devs or third-party integrations.
 
 ---
 
 ## 7. (Optional) Add Role-Based Checks in Code
 
 • If you want to do role checks inside route handlers (in addition to or instead of RLS), do the following:  
-  1. Query the “profiles” table to get the user’s role.  
+  1. Query the "profiles" table to get the user's role.  
   2. If role !== 'admin', for example, skip or limit certain functionality.  
   3. Return an error if the user is not allowed to perform an action.  
 
@@ -108,7 +108,7 @@ Below is a step-by-step outline for a junior developer to create Basic REST API 
 ## 8. Deploy and Validate in Production
 
 • When deploying, ensure environment variables (NEXT_PUBLIC_SUPABASE_URL, etc.) are set properly.  
-• Check Supabase’s production RLS rules. They might differ from development if you made changes.  
+• Check Supabase's production RLS rules. They might differ from development if you made changes.  
 • Verify logs for any errors or permission denials once live.  
 
 ---
@@ -128,7 +128,7 @@ Below is a step-by-step outline for a junior developer to create Basic REST API 
 • app/api/tickets/route.ts (handles list + create).  
 • app/api/tickets/[id]/route.ts (handles read, update, delete).  
 • middleware.ts (optional for role-based checks).  
-• utils/supabase/server.ts (or wherever your server-side Supabase client is set up).  
+• src/utils/supabase/server.ts (or wherever your server-side Supabase client is set up).  
 • .env.local (for environment variables like Supabase project URL and keys).
 
 ---

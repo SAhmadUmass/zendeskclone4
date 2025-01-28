@@ -1,13 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { cookies } from 'next/headers'
 
 export async function middleware(request: NextRequest) {
   console.log('🔒 [Middleware] Starting...', {
     path: request.nextUrl.pathname,
-    cookies: request.cookies.getAll().map(c => c.name)
   })
 
-  let supabaseResponse = NextResponse.next({
+  // Create a response early to handle cookie setting
+  const cookieStore = await cookies()
+  let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
@@ -20,16 +22,24 @@ export async function middleware(request: NextRequest) {
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll()
+          return cookieStore.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, {
+                ...options,
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+              })
+            })
+          } catch (error) {
+            console.error('🔒 [Middleware] Error setting cookies:', error)
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
       },
     }
@@ -63,7 +73,8 @@ export async function middleware(request: NextRequest) {
   if (!user && isProtectedRoute) {
     console.log('🔒 [Middleware] Redirecting unauthenticated user to login')
     const redirectUrl = new URL('/employee-login', request.url)
-    return NextResponse.redirect(redirectUrl)
+    response = NextResponse.redirect(redirectUrl)
+    return response
   }
 
   // If user is authenticated and trying to access protected routes, check roles
@@ -86,7 +97,8 @@ export async function middleware(request: NextRequest) {
 
     if (profileError) {
       console.error('🔒 [Middleware] Error fetching user role:', profileError)
-      return NextResponse.redirect(new URL('/unauthorized', request.url))
+      response = NextResponse.redirect(new URL('/unauthorized', request.url))
+      return response
     }
 
     const userRole = profile?.role
@@ -97,7 +109,8 @@ export async function middleware(request: NextRequest) {
         userRole,
         requiredRole: 'admin'
       })
-      return NextResponse.redirect(new URL('/unauthorized', request.url))
+      response = NextResponse.redirect(new URL('/unauthorized', request.url))
+      return response
     }
 
     if (isSupportRoute && !['admin', 'support'].includes(userRole || '')) {
@@ -105,7 +118,8 @@ export async function middleware(request: NextRequest) {
         userRole,
         allowedRoles: ['admin', 'support']
       })
-      return NextResponse.redirect(new URL('/unauthorized', request.url))
+      response = NextResponse.redirect(new URL('/unauthorized', request.url))
+      return response
     }
 
     if (isCustomerRoute && userRole !== 'customer') {
@@ -113,7 +127,8 @@ export async function middleware(request: NextRequest) {
         userRole,
         requiredRole: 'customer'
       })
-      return NextResponse.redirect(new URL('/unauthorized', request.url))
+      response = NextResponse.redirect(new URL('/unauthorized', request.url))
+      return response
     }
   }
 
@@ -130,16 +145,22 @@ export async function middleware(request: NextRequest) {
       isAuthRoute
     })
 
+    let redirectUrl: URL | null = null
     if (profile?.role === 'admin') {
-      return NextResponse.redirect(new URL('/admin-dashboard', request.url))
+      redirectUrl = new URL('/admin-dashboard', request.url)
     } else if (profile?.role === 'support') {
-      return NextResponse.redirect(new URL('/support-dashboard', request.url))
+      redirectUrl = new URL('/support-dashboard', request.url)
     } else if (profile?.role === 'customer') {
-      return NextResponse.redirect(new URL('/customer-dashboard', request.url))
+      redirectUrl = new URL('/customer-dashboard', request.url)
+    }
+
+    if (redirectUrl) {
+      response = NextResponse.redirect(redirectUrl)
+      return response
     }
   }
 
-  return supabaseResponse
+  return response
 }
 
 export const config = {
@@ -155,17 +176,21 @@ export const config = {
   ],
 }
 
-// Mock cookies for Edge runtime
+// Updated Edge Storage Adapter that only uses getAll/setAll
 export class EdgeStorageAdapter {
-  async set(name: string, value: string, options: any) {
-    // Implementation
+  private cookieStore: Map<string, { value: string, options?: any }> = new Map()
+
+  getAll() {
+    return Array.from(this.cookieStore.entries()).map(([name, { value, options }]) => ({
+      name,
+      value,
+      options
+    }))
   }
 
-  async get(name: string) {
-    return null
-  }
-
-  async remove(name: string, options: any) {
-    // Implementation
+  setAll(cookiesToSet: Array<{ name: string, value: string, options?: any }>) {
+    cookiesToSet.forEach(({ name, value, options }) => {
+      this.cookieStore.set(name, { value, options })
+    })
   }
 } 
