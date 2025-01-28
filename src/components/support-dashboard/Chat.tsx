@@ -34,6 +34,11 @@ export function Chat({ ticketId, customerName, ticketTitle }: ChatProps) {
   const scrollRef = React.useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
+  // Add useEffect for scrolling when messages change
+  React.useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
   // Fetch initial messages
   React.useEffect(() => {
     async function fetchMessages() {
@@ -85,45 +90,85 @@ export function Chat({ ticketId, customerName, ticketTitle }: ChatProps) {
 
     fetchMessages()
 
-    // Set up real-time subscription
+    // Set up real-time subscription with enhanced error handling and typing
     const channel = supabase
       .channel(`messages:${ticketId}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
           schema: 'public',
           table: 'messages',
           filter: `request_id=eq.${ticketId}`
         },
         async (payload) => {
-          // Fetch both message and profile
-          const [messageRes, profileRes] = await Promise.all([
-            supabase
-              .from('messages')
-              .select('*')
-              .eq('id', payload.new.id)
-              .single(),
-            supabase
-              .from('profiles')
-              .select('id, full_name')
-              .eq('id', payload.new.sender_id)
-              .single()
-          ])
+          try {
+            if (payload.eventType === 'INSERT') {
+              // Fetch both message and profile with error handling
+              const messageRes = await supabase
+                .from('messages')
+                .select(`
+                  *,
+                  profiles:sender_id (
+                    id,
+                    full_name
+                  )
+                `)
+                .eq('id', payload.new.id)
+                .single()
 
-          if (!messageRes.error && !profileRes.error) {
-            const newMessage = {
-              ...messageRes.data,
-              profiles: profileRes.data
+              if (messageRes.error) throw new Error(`Message fetch error: ${messageRes.error.message}`)
+
+              const newMessage = {
+                ...messageRes.data,
+                profiles: messageRes.data.profiles || { full_name: 'Unknown User' }
+              }
+              setMessages(prev => [...prev, newMessage])
+            } else if (payload.eventType === 'DELETE') {
+              // Remove deleted message from state
+              setMessages(prev => prev.filter(msg => msg.id !== payload.old.id))
+            } else if (payload.eventType === 'UPDATE') {
+              // Update the modified message with profile data
+              const messageRes = await supabase
+                .from('messages')
+                .select(`
+                  *,
+                  profiles:sender_id (
+                    id,
+                    full_name
+                  )
+                `)
+                .eq('id', payload.new.id)
+                .single()
+
+              if (messageRes.error) throw new Error(`Message fetch error: ${messageRes.error.message}`)
+
+              setMessages(prev => 
+                prev.map(msg => 
+                  msg.id === payload.new.id ? {
+                    ...messageRes.data,
+                    profiles: messageRes.data.profiles || { full_name: 'Unknown User' }
+                  } : msg
+                )
+              )
             }
-            setMessages(prev => [...prev, newMessage])
-            scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+          } catch (error) {
+            console.error('Realtime subscription error:', error)
+            setError(error instanceof Error ? error.message : 'Failed to process realtime update')
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to realtime updates')
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('Failed to subscribe to realtime updates')
+          setError('Failed to connect to realtime updates')
+        }
+      })
 
     return () => {
+      console.log('Cleaning up realtime subscription')
       channel.unsubscribe()
     }
   }, [ticketId, supabase])
