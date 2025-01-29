@@ -16,8 +16,8 @@ interface Message {
   sender_type: 'customer' | 'support'
   created_at: string
   profiles: {
-    full_name: string
-  }
+    full_name: string | null
+  } | null
 }
 
 interface ChatProps {
@@ -46,38 +46,30 @@ export function Chat({ ticketId, customerName, ticketTitle }: ChatProps) {
         setIsLoading(true)
         setError(null)
 
-        // Get messages
+        // Get messages with profiles in a single query
         const { data: messagesData, error: messagesError } = await supabase
           .from('messages')
-          .select('*')
+          .select(`
+            *,
+            profiles:sender_id (
+              id,
+              full_name
+            )
+          `)
           .eq('request_id', ticketId)
           .order('created_at', { ascending: true })
 
         if (messagesError) throw messagesError
 
-        // Get profiles for these messages
-        const senderIds = [...new Set(messagesData.map(m => m.sender_id))]
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .in('id', senderIds)
-
-        if (profilesError) throw profilesError
-
-        // Create a map of profiles
-        const profileMap = new Map(
-          profilesData.map(p => [p.id, p])
-        )
-
-        // Combine the data
-        const transformedMessages = messagesData.map(msg => ({
+        // Transform the data to match our Message interface
+        const transformedMessages = messagesData?.map(msg => ({
           id: msg.id,
           content: msg.content,
           sender_id: msg.sender_id,
           sender_type: msg.sender_type,
           created_at: msg.created_at,
-          profiles: profileMap.get(msg.sender_id) || { full_name: 'Unknown' }
-        }))
+          profiles: msg.profiles || { full_name: 'Unknown User' }
+        })) || []
 
         setMessages(transformedMessages)
       } catch (err) {
@@ -90,13 +82,13 @@ export function Chat({ ticketId, customerName, ticketTitle }: ChatProps) {
 
     fetchMessages()
 
-    // Set up real-time subscription with enhanced error handling and typing
+    // Set up real-time subscription
     const channel = supabase
       .channel(`messages:${ticketId}`)
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
           table: 'messages',
           filter: `request_id=eq.${ticketId}`
@@ -104,8 +96,7 @@ export function Chat({ ticketId, customerName, ticketTitle }: ChatProps) {
         async (payload) => {
           try {
             if (payload.eventType === 'INSERT') {
-              // Fetch both message and profile with error handling
-              const messageRes = await supabase
+              const { data: newMessage, error: messageError } = await supabase
                 .from('messages')
                 .select(`
                   *,
@@ -117,19 +108,16 @@ export function Chat({ ticketId, customerName, ticketTitle }: ChatProps) {
                 .eq('id', payload.new.id)
                 .single()
 
-              if (messageRes.error) throw new Error(`Message fetch error: ${messageRes.error.message}`)
+              if (messageError) throw messageError
 
-              const newMessage = {
-                ...messageRes.data,
-                profiles: messageRes.data.profiles || { full_name: 'Unknown User' }
-              }
-              setMessages(prev => [...prev, newMessage])
+              setMessages(prev => [...prev, {
+                ...newMessage,
+                profiles: newMessage.profiles || { full_name: 'Unknown User' }
+              }])
             } else if (payload.eventType === 'DELETE') {
-              // Remove deleted message from state
               setMessages(prev => prev.filter(msg => msg.id !== payload.old.id))
             } else if (payload.eventType === 'UPDATE') {
-              // Update the modified message with profile data
-              const messageRes = await supabase
+              const { data: updatedMessage, error: messageError } = await supabase
                 .from('messages')
                 .select(`
                   *,
@@ -141,13 +129,13 @@ export function Chat({ ticketId, customerName, ticketTitle }: ChatProps) {
                 .eq('id', payload.new.id)
                 .single()
 
-              if (messageRes.error) throw new Error(`Message fetch error: ${messageRes.error.message}`)
+              if (messageError) throw messageError
 
               setMessages(prev => 
                 prev.map(msg => 
                   msg.id === payload.new.id ? {
-                    ...messageRes.data,
-                    profiles: messageRes.data.profiles || { full_name: 'Unknown User' }
+                    ...updatedMessage,
+                    profiles: updatedMessage.profiles || { full_name: 'Unknown User' }
                   } : msg
                 )
               )
@@ -158,17 +146,16 @@ export function Chat({ ticketId, customerName, ticketTitle }: ChatProps) {
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe((status, err) => {
         if (status === 'SUBSCRIBED') {
           console.log('Successfully subscribed to realtime updates')
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('Failed to subscribe to realtime updates')
+          console.error('Failed to subscribe to realtime updates:', err)
           setError('Failed to connect to realtime updates')
         }
       })
 
     return () => {
-      console.log('Cleaning up realtime subscription')
       channel.unsubscribe()
     }
   }, [ticketId, supabase])
@@ -266,16 +253,14 @@ export function Chat({ ticketId, customerName, ticketTitle }: ChatProps) {
             >
               <Avatar>
                 <AvatarFallback>
-                  {msg.profiles.full_name[0].toUpperCase()}
+                  {msg.profiles?.full_name?.[0]?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
-              <div className={`rounded-lg p-3 ${
-                msg.sender_type === 'support'
-                  ? 'bg-primary text-primary-foreground ml-auto' 
-                  : 'bg-muted'
+              <div className={`flex-1 px-4 py-2 rounded-lg ${
+                msg.sender_type === 'support' ? 'bg-primary text-primary-foreground ml-2' : 'bg-muted mr-2'
               }`}>
                 <p className="text-xs font-medium mb-1">
-                  {msg.profiles.full_name}
+                  {msg.profiles?.full_name || 'Unknown User'}
                 </p>
                 <p className="text-sm">
                   {msg.content}

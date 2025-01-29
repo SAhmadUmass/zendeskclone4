@@ -1,8 +1,7 @@
 'use client'
 
 import { useToast } from "@/components/ui/use-toast"
-import { ResolvedTicketsRealtime } from "./components/users-realtime"
-import type { Ticket } from "./components/users-realtime"
+import { ResolvedTicketsRealtime, type Ticket } from "./components/resolved-tickets-realtime"
 
 export function ResolvedTicketsNotifier() {
   const { toast } = useToast()
