@@ -203,6 +203,37 @@ export default function Page() {
     }
   }
 
+  const handleStatusUpdate = async (ticketId: string, newStatus: TicketStatus) => {
+    try {
+      const response = await fetch('/api/admin-dashboard/tickets/status', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ticketId, status: newStatus }),
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update ticket status')
+      }
+
+      // Update local state
+      setTickets(tickets.map(ticket => {
+        if (ticket.id === ticketId) {
+          return {
+            ...ticket,
+            status: newStatus
+          }
+        }
+        return ticket
+      }))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update ticket status')
+    }
+  }
+
   if (error) {
     return (
       <Alert variant="destructive">
@@ -266,7 +297,21 @@ export default function Page() {
             <TableRow key={ticket.id}>
               <TableCell>{ticket.id.slice(0, 8)}</TableCell>
               <TableCell>{ticket.title}</TableCell>
-              <TableCell>{ticket.status}</TableCell>
+              <TableCell>
+                <Select 
+                  value={ticket.status} 
+                  onValueChange={(value) => handleStatusUpdate(ticket.id, value as TicketStatus)}
+                >
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue>{ticket.status}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="open">Open</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="resolved">Resolved</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TableCell>
               <TableCell>{ticket.priority}</TableCell>
               <TableCell>{ticket.customer?.full_name || "Unknown"}</TableCell>
               <TableCell>

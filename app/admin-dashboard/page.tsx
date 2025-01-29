@@ -7,6 +7,7 @@ import { CardTitle } from "@/components/ui/card"
 import { Ticket, Users, AlertTriangle } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 import { useEffect, useState } from "react"
+import { ResolvedTicketsNotifier } from './resolved-tickets'
 
 interface DashboardMetrics {
   totalTickets: number
@@ -70,6 +71,7 @@ export default function Page() {
 
   return (
     <div>
+      <ResolvedTicketsNotifier />
       <h1 className="text-3xl font-semibold mb-6">Dashboard Overview</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>

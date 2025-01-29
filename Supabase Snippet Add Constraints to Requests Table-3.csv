@@ -1,0 +1,23 @@
+﻿"schemaname","tablename","policyname","permissive","roles","cmd","check_expression","with_check"
+"public","messages","Customers can insert messages on their requests","PERMISSIVE","{public}","INSERT","","((EXISTS ( SELECT 1
+   FROM requests
+  WHERE ((requests.id = messages.request_id) AND (requests.customer_id = auth.uid())))) AND (sender_type = 'customer'::text) AND (sender_id = auth.uid()))"
+"public","messages","Support staff can insert messages","PERMISSIVE","{public}","INSERT","","((EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'support'::text)))) AND (sender_type = 'support'::text) AND (sender_id = auth.uid()))"
+"public","messages","view_messages","PERMISSIVE","{public}","SELECT","((sender_id = auth.uid()) OR (EXISTS ( SELECT 1
+   FROM requests
+  WHERE ((requests.id = messages.request_id) AND (requests.customer_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'support'::text)))))",""
+"public","profiles","Admin view all profiles","PERMISSIVE","{authenticated}","SELECT","(((role = 'admin'::text) AND (id = auth.uid())) OR (id = auth.uid()) OR ((role = 'support'::text) AND (id = auth.uid())))",""
+"public","profiles","Admins can update user roles","PERMISSIVE","{public}","UPDATE","(role = 'admin'::text)","(role = ANY (ARRAY['admin'::text, 'support'::text, 'customer'::text]))"
+"public","profiles","Support view all profiles","PERMISSIVE","{public}","SELECT","((id = auth.uid()) AND (role = 'support'::text))",""
+"public","profiles","View own profile","PERMISSIVE","{public}","SELECT","(auth.uid() = id)",""
+"public","requests","Support staff can update assigned tickets","PERMISSIVE","{public}","UPDATE","((assigned_to = auth.uid()) OR (EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'support'::text)))))",""
+"public","requests","create_requests","PERMISSIVE","{public}","INSERT","","(customer_id = auth.uid())"
+"public","requests","view_requests","PERMISSIVE","{public}","SELECT","((customer_id = auth.uid()) OR (EXISTS ( SELECT 1
+   FROM profiles
+  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['admin'::text, 'support'::text]))))))",""

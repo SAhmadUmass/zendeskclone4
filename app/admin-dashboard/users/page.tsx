@@ -8,16 +8,10 @@ import { createClient } from "@/utils/supabase/client"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { UsersRealtime } from '../components/users-realtime'
+import type { User } from '@/types/users'
 
-interface User {
-  id: string
-  full_name: string | null
-  email: string
-  role: string
-  created_at: string
-}
-
-export default function Page() {
+export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [newStaffEmail, setNewStaffEmail] = useState("")
   const [loading, setLoading] = useState(true)
@@ -107,6 +101,11 @@ export default function Page() {
     }
   }
 
+  const handleUserUpdate = (updatedUser: User) => {
+    // Toast or notification could be added here
+    console.log('User updated:', updatedUser)
+  }
+
   if (error) {
     return (
       <Alert variant="destructive">
@@ -152,7 +151,14 @@ export default function Page() {
 
   return (
     <div>
-      <h1 className="text-3xl font-semibold mb-6">Support Staff Management</h1>
+      <h1 className="text-3xl font-semibold mb-6">User Management</h1>
+      
+      {/* Real-time updates handler */}
+      <UsersRealtime 
+        initialUsers={users} 
+        onUserUpdate={handleUserUpdate}
+      />
+
       <div className="mb-6 flex items-center space-x-2">
         <Input
           type="email"
