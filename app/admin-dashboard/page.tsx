@@ -24,12 +24,19 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  
   useEffect(() => {
+    const supabase = createClient()
+
     const fetchMetrics = async () => {
       try {
-        const supabase = createClient()
-        
+        // Check session first
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          setError('Please log in to view dashboard metrics')
+          setIsLoading(false)
+          return
+        }
+
         // Fetch metrics in parallel
         const [totalTickets, totalCustomers, highPriorityTickets] = await Promise.all([
           // Get total tickets
@@ -55,18 +62,71 @@ export default function Page() {
           totalCustomers: totalCustomers.count ?? 0,
           highPriorityTickets: highPriorityTickets.count ?? 0
         })
+        setError(null)
       } catch (err) {
+        console.error('Error fetching metrics:', err)
         setError(err instanceof Error ? err.message : 'Failed to fetch metrics')
       } finally {
         setIsLoading(false)
       }
     }
 
+    // Initial fetch
     fetchMetrics()
+
+    // Set up auth state listener for changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        // Refetch metrics when auth state changes to logged in
+        fetchMetrics()
+      } else {
+        setError('Please log in to view dashboard metrics')
+        setMetrics({
+          totalTickets: 0,
+          totalCustomers: 0,
+          highPriorityTickets: 0
+        })
+      }
+    })
+
+    // Set up real-time subscription for metrics updates
+    const channel = supabase
+      .channel('metrics-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'requests'
+        },
+        () => {
+          // Only refetch if we have a session
+          supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+              fetchMetrics()
+            }
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      subscription.unsubscribe()
+      channel.unsubscribe()
+    }
   }, [])
 
   if (error) {
-    return <div className="text-red-500">Error loading dashboard metrics: {error}</div>
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px]">
+        <div className="text-red-500 mb-4">{error}</div>
+        <a href="/employee-login" className="text-blue-500 hover:underline">
+          Return to login
+        </a>
+      </div>
+    )
   }
 
   return (

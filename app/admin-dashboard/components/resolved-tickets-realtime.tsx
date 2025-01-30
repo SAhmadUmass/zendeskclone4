@@ -20,7 +20,9 @@ export function ResolvedTicketsRealtime({ onTicketResolved }: ResolvedTicketsRea
   const supabase = createClient()
 
   useEffect(() => {
-    // Set up realtime subscription for resolved tickets
+    console.log('Setting up realtime subscription')
+    
+    // Set up realtime subscription for tickets being resolved
     const channel = supabase
       .channel('resolved-tickets')
       .on(
@@ -28,19 +30,30 @@ export function ResolvedTicketsRealtime({ onTicketResolved }: ResolvedTicketsRea
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'requests',
-          filter: 'status=eq.resolved'  // Only listen for updates where status is resolved
+          table: 'requests'
         },
         (payload: RealtimePostgresChangesPayload<Ticket>) => {
-          if (payload.eventType === 'UPDATE' && payload.new) {
+          console.log('Received realtime update:', payload)
+          // Check if this update changed the status to resolved
+          if (
+            payload.eventType === 'UPDATE' && 
+            payload.new && 
+            payload.old &&
+            payload.old.status !== 'resolved' && 
+            payload.new.status === 'resolved'
+          ) {
+            console.log('Ticket was just resolved:', payload.new)
             onTicketResolved?.(payload.new)
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('Subscription status:', status)
+      })
 
     // Cleanup subscription on unmount
     return () => {
+      console.log('Cleaning up subscription')
       channel.unsubscribe()
     }
   }, [supabase, onTicketResolved])
