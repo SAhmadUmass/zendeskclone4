@@ -40,17 +40,22 @@ export function RecentTickets({ limit }: { limit: number }) {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
+    const supabase = createClient()
+    
     const fetchTickets = async () => {
       try {
         setError(null)
-        const supabase = createClient()
         
         // Get current user
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         if (userError) throw new Error('Failed to get user: ' + userError.message)
         if (!user) throw new Error('No authenticated user found')
+
+        // Store user ID
+        setUserId(user.id)
 
         // Get user's role from profiles
         const { data: profile, error: profileError } = await supabase
@@ -117,8 +122,37 @@ export function RecentTickets({ limit }: { limit: number }) {
       }
     }
 
+    // Initial fetch
     fetchTickets()
-  }, [])
+
+    // Set up realtime subscription only if we have a userId
+    let channel = null
+    if (userId) {
+      channel = supabase
+        .channel('requests_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'requests',
+            filter: `assigned_to=eq.${userId}`
+          },
+          () => {
+            // Refetch tickets when changes occur
+            fetchTickets()
+          }
+        )
+        .subscribe()
+    }
+
+    // Cleanup subscription
+    return () => {
+      if (channel) {
+        channel.unsubscribe()
+      }
+    }
+  }, [userId])
 
   if (error) {
     return (
