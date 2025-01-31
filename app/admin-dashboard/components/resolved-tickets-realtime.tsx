@@ -15,7 +15,7 @@ export interface Ticket {
 }
 
 // Define valid ticket statuses
-const VALID_TICKET_STATUSES = ['open', 'pending', 'in_progress', 'resolved'] as const
+const VALID_TICKET_STATUSES = ['open', 'in_progress', 'resolved'] as const
 type TicketStatus = typeof VALID_TICKET_STATUSES[number]
 
 interface ResolvedTicketsRealtimeProps {
@@ -54,18 +54,28 @@ export function ResolvedTicketsRealtime({ onTicketResolved }: ResolvedTicketsRea
         (payload: RealtimePostgresChangesPayload<Ticket>) => {
           const update = payload as TicketUpdate
           
-          // Only notify UI of status changes to resolved
-          if (
-            update.old?.status && 
-            update.old.status !== 'resolved' && 
-            update.new?.status === 'resolved'
-          ) {
+          // Validate status values
+          const oldStatus = update.old?.status
+          const newStatus = update.new?.status
+
+          // Log the payload for debugging
+          console.log('Received payload:', { 
+            old: update.old,
+            new: update.new,
+            oldStatus,
+            newStatus
+          })
+
+          // If newStatus is resolved and either oldStatus is undefined or different from resolved
+          if (newStatus === 'resolved' && (!oldStatus || oldStatus !== 'resolved')) {
             console.log('✅ Ticket resolved, updating UI:', update.new.id)
             onTicketResolved?.(update.new)
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('Subscription status:', status)
+      })
 
     return () => {
       console.log('Cleaning up subscription')
