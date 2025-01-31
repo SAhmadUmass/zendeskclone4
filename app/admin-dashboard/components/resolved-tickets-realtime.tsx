@@ -10,53 +10,68 @@ export interface Ticket {
   status: string
   customer_id: string
   created_at: string
+  summary?: string
+  summary_generated_at?: string
 }
+
+// Define valid ticket statuses
+const VALID_TICKET_STATUSES = ['open', 'pending', 'in_progress', 'resolved'] as const
+type TicketStatus = typeof VALID_TICKET_STATUSES[number]
 
 interface ResolvedTicketsRealtimeProps {
   onTicketResolved?: (ticket: Ticket) => void
 }
 
+type TicketUpdate = {
+  eventType: 'UPDATE'
+  old: Partial<Ticket>
+  new: Ticket
+}
+
+// Helper to check if a status is valid
+const isValidStatus = (status: string | undefined): status is TicketStatus => {
+  return typeof status === 'string' && VALID_TICKET_STATUSES.includes(status as TicketStatus)
+}
+
+// Helper to check if status is specifically 'resolved'
+const isResolved = (status: TicketStatus): boolean => status === 'resolved'
+
 export function ResolvedTicketsRealtime({ onTicketResolved }: ResolvedTicketsRealtimeProps) {
   const supabase = createClient()
 
   useEffect(() => {
-    console.log('Setting up realtime subscription')
+    console.log('Setting up realtime subscription for resolved tickets')
     
-    // Set up realtime subscription for tickets being resolved
     const channel = supabase
       .channel('resolved-tickets')
       .on(
-        'postgres_changes',
+        'postgres_changes' as const,
         {
           event: 'UPDATE',
           schema: 'public',
           table: 'requests'
         },
         (payload: RealtimePostgresChangesPayload<Ticket>) => {
-          console.log('Received realtime update:', payload)
-          // Check if this update changed the status to resolved
+          const update = payload as TicketUpdate
+          
+          // Only notify UI of status changes to resolved
           if (
-            payload.eventType === 'UPDATE' && 
-            payload.new && 
-            payload.old &&
-            payload.old.status !== 'resolved' && 
-            payload.new.status === 'resolved'
+            update.old?.status && 
+            update.old.status !== 'resolved' && 
+            update.new?.status === 'resolved'
           ) {
-            console.log('Ticket was just resolved:', payload.new)
-            onTicketResolved?.(payload.new)
+            console.log('✅ Ticket resolved, updating UI:', update.new.id)
+            onTicketResolved?.(update.new)
           }
         }
       )
-      .subscribe((status) => {
-        console.log('Subscription status:', status)
-      })
+      .subscribe()
 
-    // Cleanup subscription on unmount
     return () => {
       console.log('Cleaning up subscription')
       channel.unsubscribe()
     }
   }, [supabase, onTicketResolved])
 
-  return null // This is a logic-only component
+  return null
 } 

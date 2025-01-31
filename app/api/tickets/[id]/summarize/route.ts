@@ -27,7 +27,7 @@ export async function POST(
     console.log('📝 Fetching ticket data from requests table...')
     const { data: ticket, error: ticketError } = await supabase
       .from("requests")
-      .select("title, description")
+      .select("title, description, status, summary")
       .eq("id", id)
       .single()
 
@@ -39,11 +39,20 @@ export async function POST(
       )
     }
 
-    if (!ticket) {
-      console.error('❌ No ticket found with ID:', id)
+    // If ticket is not resolved or already has a summary, skip
+    if (ticket.status !== 'resolved') {
+      console.log('⏭️ Ticket not resolved, skipping summary')
       return Response.json(
-        { error: "Ticket not found", id },
-        { status: 404 }
+        { message: "Ticket not resolved, skipping summary" },
+        { status: 200 }
+      )
+    }
+
+    if (ticket.summary) {
+      console.log('⏭️ Ticket already has summary, skipping')
+      return Response.json(
+        { message: "Summary already exists", summary: ticket.summary },
+        { status: 200 }
       )
     }
 
@@ -145,15 +154,25 @@ export async function POST(
     })
 
     // Generate summary
-    const summary = await chain.invoke({
+    const chainOutput = await chain.invoke({
       input_documents: docs,
     })
 
-    // Update ticket with summary
+    // Extract the refined summary from the correct property
+    const refinedSummary = chainOutput.output_text
+
+    console.log('Generated summary:', { 
+      summaryLength: refinedSummary.length,
+      summaryPreview: refinedSummary.substring(0, 100) + '...'
+    })
+
+    // Update ticket with summary (only if it doesn't have one)
     const { error: updateError } = await supabase
       .from("requests")
-      .update({ summary: summary.text })
+      .update({ summary: refinedSummary })
       .eq("id", id)
+      .eq("status", "resolved") // Only update if still resolved
+      .is("summary", null) // Only update if summary is null
 
     if (updateError) {
       console.error('❌ Error updating ticket with summary:', updateError)
@@ -163,8 +182,23 @@ export async function POST(
       )
     }
 
+    // Verify the summary was saved by fetching the updated ticket
+    const { data: updatedTicket, error: verifyError } = await supabase
+      .from("requests")
+      .select("id, title, summary")
+      .eq("id", id)
+      .single()
+
+    if (verifyError) {
+      console.error('❌ Error verifying summary update:', verifyError)
+      return Response.json(
+        { error: "Summary was saved but verification failed", details: verifyError.message },
+        { status: 500 }
+      )
+    }
+
     console.log('✅ Successfully added summary to ticket:', { id })
-    return Response.json({ success: true, summary: summary.text })
+    return Response.json({ success: true, summary: refinedSummary })
     
   } catch (error) {
     console.error("❌ Summarization error:", error)
