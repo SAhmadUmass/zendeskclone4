@@ -5,6 +5,7 @@ import { ChatOpenAI } from "@langchain/openai"
 import { PromptTemplate } from "@langchain/core/prompts"
 import { Document } from "langchain/document"
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"
+import { getTracer } from "@/utils/langsmith"
 
 export const dynamic = "force-dynamic"
 
@@ -16,6 +17,9 @@ export async function POST(
     // Get the ID from params (Next.js 15 style)
     const { id } = await params
     console.log('🎫 Attempting to summarize ticket:', { id })
+
+    // Get LangSmith tracer
+    const tracer = getTracer()
 
     // Create admin client with service role
     const supabase = createClient(
@@ -102,10 +106,11 @@ export async function POST(
 
     const docs = await textSplitter.createDocuments([textToSummarize])
 
-    // Initialize LLM
+    // Initialize LLM with tracing
     const model = new ChatOpenAI({
       modelName: "gpt-3.5-turbo",
       temperature: 0.3,
+      callbacks: tracer ? [tracer] : undefined,
     })
 
     // Create summarization templates
@@ -153,9 +158,13 @@ export async function POST(
       refinePrompt: SUMMARY_REFINE_PROMPT,
     })
 
-    // Generate summary
+    // Generate summary with run metadata
     const chainOutput = await chain.invoke({
       input_documents: docs,
+    }, {
+      runName: "Ticket Summary Generation",
+      tags: ["ticket-summary", `ticket-${id}`],
+      callbacks: tracer ? [tracer] : undefined,
     })
 
     // Extract the refined summary from the correct property

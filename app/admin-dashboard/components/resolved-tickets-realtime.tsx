@@ -62,9 +62,9 @@ export function ResolvedTicketsRealtime({ onTicketResolved }: ResolvedTicketsRea
           console.log('Received payload:', { 
             old: update.old,
             new: update.new,
-            oldStatus,
+              oldStatus,
             newStatus
-          })
+            })
 
           // If newStatus is resolved and either oldStatus is undefined or different from resolved
           if (newStatus === 'resolved' && (!oldStatus || oldStatus !== 'resolved')) {
